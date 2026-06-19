@@ -1,0 +1,73 @@
+categories:
+  health:
+    display: Health & Fitness
+    color: "#00B894"
+    keywords:
+      - workout
+      - exercise
+      - disc golf
+      - practice
+      - walk
+      - run
+      - stretch
+      - yoga
+  work:
+    display: Work & Projects
+    color: "#6C5CE7"
+    keywords:
+      - context
+      - har
+      - dev
+      - development
+      - code
+      - writing
+      - project
+      - work
+      - research
+      - planning
+  creative:
+    display: Creative & Music
+    color: "#FD79A8"
+    keywords:
+      - music
+      - guitar
+      - production
+      - song
+      - creative
+      - art
+  personal:
+    display: Personal & Life
+    color: "#FDCB6E"
+    keywords:
+      - lunch
+      - breakfast
+      - dinner
+      - relaxation
+      - personal
+      - decompression
+      - reset
+      - rituals
+      - wind-down
+      - hang out
+      - social
+  social:
+    display: Social & Family
+    color: "#E17055"
+    keywords:
+      - hang out
+      - friend
+      - family
+      - sister
+      - social
+      - phone
+      - call
+  gaming:
+    display: Gaming & Entertainment
+    color: "#A29BFE"
+    keywords:
+      - game
+      - pokopia
+      - nintendo
+      - elden ring
+      - play
+      - entertainment

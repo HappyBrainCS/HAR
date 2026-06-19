@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HAR Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script async src="https://cdn.jsdelivr.net/npm/chart.js@4.x.x/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body x-data="appState()" @hashchange.window="goTo(null)" x-init="init()">
+  <!-- Liquid Glass morphing background blobs -->
+  <div class="glass-blob blob-1"></div>
+  <div class="glass-blob blob-2"></div>
+  <div class="glass-blob blob-3"></div>
+  <div class="glass-blob blob-4"></div>
+  <!-- Tab bar (bottom on mobile, left sidebar on desktop) will be rendered below the main content -->
+  <main class="main">
+    <div x-show="loading" class="loading">Loading…</div>
+    <div x-show="error" class="card" style="background: #FEF2F2; border-color: #F87171; margin-bottom: 16px;">
+      <p style="color: var(--danger); font-weight: 500; margin: 0;" x-text="error"></p>
+    </div>
+
+    <!-- Home / Weekly Review -->
+    <template x-if="page === 'home'">
+      <section class="page" x-transition:enter="page-enter" x-transition:enter-start="page-enter-start" x-transition:leave="page-leave" x-transition:leave-end="page-leave-end">
+        <div class="page-header">
+          <h1>Weekly Review</h1>
+          <p class="page-subtitle" x-text="`Week of ${data.home?.week_start || '…'} — ${data.home?.week_total_minutes || 0} min logged`"></p>
+        </div>
+        <div class="card hero-card">
+          <div class="hero-stats three-col">
+            <div class="hero-stat"><span class="hero-value" x-text="data.home?.week_total_minutes || 0"></span><span class="hero-label">Minutes</span></div>
+            <div class="hero-stat"><span class="hero-value" x-text="data.home?.week_total_entries || 0"></span><span class="hero-label">Entries</span></div>
+            <div class="hero-stat"><span class="hero-value" x-text="data.home?.category_breakdown?.length || 0"></span><span class="hero-label">Categories</span></div>
+          </div>
+        </div>
+        <div class="card"><h2>Category Mix</h2><div class="chart-container donut-container"><canvas id="homeChart"></canvas></div></div>
+        <div class="card">
+          <h2>Recent Actions</h2>
+          <div class="action-list" x-show="data.home?.recent_actions?.length">
+            <template x-for="action in data.home?.recent_actions" :key="action.stem">
+              <div class="action-item">
+                <span class="action-date" x-text="action.date"></span>
+                <span class="action-time" x-text="action.time"></span>
+                <span class="action-activity" x-text="action.activity"></span>
+                <span class="action-duration" x-text="`${action.duration || '?'} min`"></span>
+                <p class="action-notes" x-show="action.notes_preview" x-text="action.notes_preview"></p>
+              </div>
+            </template>
+          </div>
+          <p x-show="!data.home?.recent_actions?.length" class="empty-state">No entries this week yet.</p>
+        </div>
+        <!-- Unmatched activities -->
+        <div class="card" x-show="needsCategorization && needsCategorization.length > 0">
+          <h2>⚠ Needs Categorization</h2>
+          <p class="text-secondary">Ask your agent to categorize these activities:</p>
+          <div class="action-list">
+            <template x-for="item in needsCategorization" :key="item">
+              <div class="action-item unmatched-item">
+                <span class="unmatched-label" x-text="item"></span>
+              </div>
+            </template>
+          </div>
+          <p class="text-muted caption">Review in agent chat to fix categorization</p>
+        </div>
+        <div class="page-footer caption text-muted" x-text="`Data as of ${meta?.generated || '…'}`"></div>
+      </section>
+    </template>
+
+    <!-- Time & Stats -->
+    <template x-if="page === 'time-stats'">
+      <section class="page" x-transition:enter="page-enter" x-transition:enter-start="page-enter-start" x-transition:leave="page-leave" x-transition:leave-end="page-leave-end">
+        <div class="page-header"><h1>Time &amp; Stats</h1></div>
+        <div class="range-toggle">
+          <button @click="range = '7d'; fetchTimeStats()" :class="{ active: range === '7d' }">7 Days</button>
+          <button @click="range = '30d'; fetchTimeStats()" :class="{ active: range === '30d' }">30 Days</button>
+          <button @click="range = 'all'; fetchTimeStats()" :class="{ active: range === 'all' }">All Time</button>
+        </div>
+        <div class="card">
+          <h2 x-text="`${range === '7d' ? 'Last 7' : range === '30d' ? 'Last 30' : 'All'} Days`"></h2>
+          <div class="hero-stats">
+            <div class="hero-stat"><span class="hero-label">Total Minutes</span><span class="hero-value" x-text="timeStats?.total_minutes || 0"></span></div>
+            <div class="hero-stat"><span class="hero-label">Entries</span><span class="hero-value" x-text="timeStats?.total_entries || 0"></span></div>
+          </div>
+          <div class="chart-container"><canvas id="timeChart"></canvas></div>
+        </div>
+        <!-- Stats Section: Only activities with computed_stats -->
+        <div class="stats-section" x-show="statsActivities?.length > 0">
+          <h2>Activity Stats</h2>
+          <template x-for="item in statsActivities" :key="item.activity">
+            <div class="stats-activity-card" :class="item.categoryClass" @click="goTo('wikis/' + item.slug)">
+              <div class="stats-card-header">
+                <span class="activity-name" x-text="item.activity"></span>
+                <span class="stats-count" x-text="item.stats.length + ' stats'"></span>
+              </div>
+              <div class="stats-pills">
+                <template x-for="stat in item.stats" :key="stat.name">
+                  <div class="stats-pill">
+                    <span class="stats-pill-label" x-text="stat.name"></span>
+                    <span class="stats-pill-value" x-text="stat.value"></span>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+
+
+      </section>
+    </template>
+
+    <!-- Activity Wikis (replaces Notes) -->
+    <template x-if="page === 'wikis'">
+      <section class="page" x-transition:enter="page-enter" x-transition:enter-start="page-enter-start" x-transition:leave="page-leave" x-transition:leave-end="page-leave-end">
+        <div class="page-header"><h1>Activity Wikis</h1></div>
+        <!-- Browse view: categories with activities -->
+        <template x-if="!selectedWikiSlug">
+          <div>
+            <template x-for="cat in wikiData?.by_category" :key="cat.category">
+              <div class="card wiki-category-card" :style="`border-left-color: ${cat.color}`">
+                <div class="category-header">
+                  <span class="category-dot" :style="`background: ${cat.color}`"></span>
+                  <span class="category-name" x-text="cat.category.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())"></span>
+                  <span class="category-total" x-text="`${cat.total_minutes} min`"></span>
+                </div>
+                <div class="activities-list">
+                  <template x-for="act in cat.activities" :key="act.slug">
+                    <div class="activity-row clickable" @click="drillWiki(act.slug, act.name)">
+                      <div class="activity-row-main">
+                        <span class="activity-name" x-text="act.name"></span>
+                        <span class="activity-stats" x-text="`${act.total_minutes} min · ${act.entry_count} ${act.entry_count === 1 ? 'entry' : 'entries'}`"></span>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </template>
+            <p x-show="!wikiData?.by_category?.length" class="empty-state">No activities tracked yet. Tell your agent what you're up to.</p>
+          </div>
+        </template>
+        <!-- Detail view: individual activity wiki -->
+        <template x-if="selectedWikiSlug">
+          <div>
+            <button class="back-btn" @click="selectedWikiSlug = null; wikiDetail = null;">← Back to Activities</button>
+            <template x-if="wikiDetail">
+              <div>
+                <div class="card">
+                  <h1 x-text="wikiDetail.activity"></h1>
+                  <p class="caption text-secondary">
+                    <span x-text="`Category: ${wikiDetail.category} · Created ${wikiDetail.first_entry || '…'}`"></span>
+                  </p>
+                  <div class="hero-stats small three-col">
+                    <div class="hero-stat"><span class="hero-value" x-text="wikiDetail.total_minutes || 0"></span><span class="hero-label">Total Min</span></div>
+                    <div class="hero-stat"><span class="hero-value" x-text="wikiDetail.entry_count || 0"></span><span class="hero-label">Entries</span></div>
+                    <div class="hero-stat"><span class="hero-value" x-text="`${Math.round(wikiDetail.avg_duration || 0)}`"></span><span class="hero-label">Avg Min</span></div>
+                  </div>
+                </div>
+                <!-- Wiki Top Stats: aggregated custom stats (only if exists) -->
+                <div class="card" x-show="wikiDetail.computed_stats && wikiDetail.computed_stats.length > 0">
+                  <h2>Lifetime Activity Stats</h2>
+                  <div class="wiki-stats-strip">
+                    <template x-for="stat in wikiDetail.computed_stats" :key="stat.name">
+                      <div class="stats-pill">
+                        <span class="stats-pill-label" x-text="stat.name"></span>
+                        <span class="stats-pill-value" x-text="stat.value"></span>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+                <div class="card">
+                  <h2>Lifetime Stats</h2>
+                  <div class="wiki-stats-grid">
+                    <div class="wiki-stat"><span class="wiki-stat-value" x-text="`${wikiDetail.best_week || 0} min`"></span><span class="wiki-stat-label">Best Week</span></div>
+                    <div class="wiki-stat"><span class="wiki-stat-value" x-text="`${wikiDetail.streak || 0}w`"></span><span class="wiki-stat-label">Streak</span></div>
+                    <div class="wiki-stat"><span class="wiki-stat-value" x-text="`${Math.round((wikiDetail.consistency || 0) * 100)}%`"></span><span class="wiki-stat-label">Consistency</span></div>
+                  </div>
+                </div>
+                <!-- Wiki knowledge content (if wiki exists) — all sections -->
+                <div class="card" x-show="wikiDetail.wiki?.exists">
+                  <div class="wiki-content-block">
+                    <div x-show="wikiDetail.wiki?.current_answer" class="wiki-section">
+                      <h2>Current Answer</h2>
+                      <p class="wiki-bluf" x-text="wikiDetail.wiki.current_answer"></p>
+                    </div>
+                    <template x-for="sec in wikiDetail.wiki?.sections" :key="sec.heading">
+                      <div class="wiki-section">
+                        <h2 x-text="sec.heading"></h2>
+                        <div class="wiki-section-body" x-html="sec.body.replace(/\n/g, '<br>')"></div>
+                        <p class="caption text-muted" x-show="sec.body.length >= 600">… (truncated)</p>
+                      </div>
+                    </template>
+                    <div class="wiki-footer">
+                      <span class="badge" x-show="wikiDetail.wiki.stage" x-text="`🌱 ${wikiDetail.wiki.stage}`"></span>
+                      <span class="caption text-muted" x-show="wikiDetail.wiki.updated" x-text="`Updated ${wikiDetail.wiki.updated}`"></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="card">
+                  <h2>Recent Entries</h2>
+                  <div class="action-list" x-show="wikiDetail.recent_entries?.length">
+                    <template x-for="entry in wikiDetail.recent_entries" :key="entry.date + entry.time">
+                      <div class="action-item">
+                        <span class="action-date" x-text="entry.date"></span>
+                        <span class="action-time" x-text="entry.time"></span>
+                        <span class="action-duration" x-text="`${entry.duration} min`"></span>
+                        <p class="action-notes" x-show="entry.notes_preview" x-text="entry.notes_preview"></p>
+                      </div>
+                    </template>
+                  </div>
+                  <p x-show="!wikiDetail.recent_entries?.length" class="empty-state">No entries yet.</p>
+                </div>
+              </div>
+            </template>
+            <template x-if="!wikiDetail">
+              <div class="card"><p class="empty-state">Loading activity history…</p></div>
+            </template>
+          </div>
+        </template>
+      </section>
+    </template>
+
+    <!-- Calendar -->
+    <template x-if="page === 'calendar'">
+      <section class="page" x-transition:enter="page-enter" x-transition:enter-start="page-enter-start" x-transition:leave="page-leave" x-transition:leave-end="page-leave-end">
+        <div class="page-header">
+          <h1>Calendar</h1>
+          <div class="month-nav">
+            <button @click="changeMonth(-1)">← Prev</button>
+            <span class="month-label" x-text="`${['January','February','March','April','May','June','July','August','September','October','November','December'][calendarMonth - 1]} ${calendarYear}`"></span>
+            <button @click="changeMonth(1)">Next →</button>
+          </div>
+        </div>
+        
+        <!-- Plan Tomorrow Button -->
+        <div class="card plan-tomorrow-card">
+          <template x-if="!showPlanInput">
+            <div class="plan-tomorrow-cta">
+              <button class="plan-btn" @click="openPlanInput()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Plan Tomorrow
+              </button>
+              <p class="plan-hint">What do you want to do tomorrow? Set a plan for <strong><span x-text="tomorrowDate"></span></strong></p>
+            </div>
+          </template>
+          <template x-if="showPlanInput">
+            <div class="plan-input-area">
+              <h2>Plan for <span x-text="tomorrowDate"></span></h2>
+              <textarea x-model="planInputText" class="plan-textarea" rows="4" placeholder="What are your plans? E.g.:&#10;• Push workout from 7-8am&#10;• Disc golf practice at noon&#10;• Work on Context OS in the afternoon"></textarea>
+              <div class="plan-actions">
+                <button class="plan-btn primary" @click="savePlan()" x-text="savingPlan ? 'Saving…' : 'Save Plan'"></button>
+                <button class="plan-btn cancel" @click="cancelPlan()">Cancel</button>
+              </div>
+              <p x-show="planSaved" class="plan-success">✓ Plan saved for tomorrow!</p>
+              <p x-show="planError" class="plan-error" x-text="planError"></p>
+            </div>
+          </template>
+        </div>
+
+        <div class="card">
+          <div class="calendar-grid">
+            <div class="cal-day-header">Sun</div><div class="cal-day-header">Mon</div><div class="cal-day-header">Tue</div><div class="cal-day-header">Wed</div>
+            <div class="cal-day-header">Thu</div><div class="cal-day-header">Fri</div><div class="cal-day-header">Sat</div>
+            <template x-for="(day, i) in calendarDays" :key="day.date || 'empty-' + i">
+              <div class="cal-day" :class="day.state ? `day-${day.state}` : 'day-empty'" :title="day.notes || ''" @click="day.date && goTo('day/' + day.date)" x-text="day.num || ''"></div>
+            </template>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Legend</h2>
+          <div class="legend">
+            <div class="legend-item"><span class="day-blue dot"></span> Plan + Actions</div>
+            <div class="legend-item"><span class="day-green dot"></span> Plan Only</div>
+            <div class="legend-item"><span class="day-red dot"></span> Actions Only</div>
+            <div class="legend-item"><span class="day-neutral dot"></span> No Activity</div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Ideal Routines</h2>
+          <div class="plan-block"><h3>Daily</h3><p x-text="plansData?.ideal_daily || 'Placeholder'"></p></div>
+          <div class="plan-block"><h3>Weekly</h3><p x-text="plansData?.ideal_weekly || 'Placeholder'"></p></div>
+        </div>
+      </section>
+    </template>
+
+    <!-- Day Detail -->
+    <template x-if="page === 'day'">
+      <section class="page" x-transition:enter="page-enter" x-transition:enter-start="page-enter-start" x-transition:leave="page-leave" x-transition:leave-end="page-leave-end">
+        <div class="page-header">
+          <button class="back-btn" @click="goTo('calendar')">← Back to Calendar</button>
+          <h1 x-text="dayDate || 'Day Detail'"></h1>
+        </div>
+        <template x-if="dayDetail && dayDetail.actuals && dayDetail.actuals.length">
+          <div>
+            <div class="card">
+              <div class="hero-stats small">
+                <div class="hero-stat"><span class="hero-label">Status</span><span class="hero-value day-badge" :class="`day-${dayDetail.state}`" x-text="dayDetail.state"></span></div>
+                <div class="hero-stat"><span class="hero-label">Entries</span><span class="hero-value" x-text="dayDetail.actuals.length"></span></div>
+              </div>
+            </div>
+            <div class="card">
+              <h2>Timeline</h2>
+              <div class="timeline">
+                <template x-for="act in dayDetail.actuals" :key="act.stem">
+                  <div class="timeline-item">
+                    <div class="timeline-item-header">
+                      <span class="tl-time" x-text="act.time || '—'"></span>
+                      <span class="tl-activity" x-text="act.activity"></span>
+                      <span class="tl-duration" x-text="`${act.duration || '?'} min`"></span>
+                    </div>
+                    <div class="tl-stats" x-show="act.computed_stats && act.computed_stats.length > 0">
+                      <template x-for="stat in act.computed_stats" :key="stat.name">
+                        <div class="tl-stat-row">
+                          <span class="tl-stat-key" x-text="stat.name"></span>
+                          <span class="tl-stat-val" x-text="stat.value"></span>
+                        </div>
+                      </template>
+                    </div>
+                    <p class="tl-notes" x-show="act.notes_preview" x-text="act.notes_preview"></p>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </template>
+        <template x-if="!dayDetail || !dayDetail.actuals || !dayDetail.actuals.length">
+          <div class="card"><p class="empty-state">This day hasn't been touched yet.</p></div>
+        </template>
+      </section>
+    </template>
+  </main>
+  <nav class="tab-bar">
+    <a href="#" class="tab-item" :class="{ active: page === 'home' }" @click.prevent="goTo('home')">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="tab-label">Home</span>
+    </a>
+    <a href="#" class="tab-item" :class="{ active: page === 'time-stats' }" @click.prevent="goTo('time-stats')">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span class="tab-label">Stats</span>
+    </a>
+    <a href="#" class="tab-item" :class="{ active: page === 'wikis' }" @click.prevent="goTo('wikis')">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span class="tab-label">Wikis</span>
+    </a>
+    <a href="#" class="tab-item" :class="{ active: page === 'calendar' }" @click.prevent="goTo('calendar')">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="tab-label">Calendar</span>
+    </a>
+  </nav>
+  <script src="/app.js"></script>
+</body>
+</html>

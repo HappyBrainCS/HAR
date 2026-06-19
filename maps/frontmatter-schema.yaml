@@ -1,0 +1,366 @@
+# frontmatter-schema.yaml
+#
+# Canonical wiki frontmatter schema. This file is LAW: the agent reads
+# it fresh when writing or updating a wiki page and the frontmatter
+# block MUST conform to what lives here.
+#
+# This file is the single source of truth for the wiki frontmatter.
+# vault_map.md and play-question-game.md point at this file. Prose
+# schemas elsewhere are advice; this is the spec.
+#
+# Scope: wiki pages only (type: wiki). Action entries, inbox files,
+# skill manuals, and map files use their own schemas described in
+# vault_map.md — they were not a pain point and are not unified here.
+#
+# Changes to this file are Tier 2 (per improve-protocols.md). Do not
+# edit without the ceremony.
+
+# Schema supports BOTH v1 and v2 frontmatter.
+# v1: type=wiki, uses stage/created/updated/source/source_of_question etc.
+# v2: type=seedling|draft OR absent, uses status/created_at/updated_at/source_origin etc.
+
+version: 2
+last_updated: 2026-04-28
+
+applies_to: wiki
+
+# --- Common fields (present in both v1 and v2) ---
+
+fields:
+  # In v1: always the literal string "wiki".
+  # In v2: often "seedling" (used as a type marker) or absent entirely.
+  - name: type
+    required: false
+    type: string
+    allowed: free_form
+    description: >
+      v1: Always the literal string "wiki". Filters agent queries.
+      v2: Often "seedling" or absent. Accept either.
+
+  - name: category
+    required: true
+    type: string
+    allowed: free_form
+    description: >
+      Free-form wiki category slug (lowercase, hyphenated). Must
+      match the top-level folder name under wiki/. Created freely
+      as needed — no fixed list. Independent of the fixed HAR
+      action categories.
+
+  - name: topic
+    required: true
+    type: string
+    allowed: free_form
+    description: >
+      Topic slug within the category (lowercase, hyphenated). Must
+      match the folder name at wiki/<category>/<topic>/.
+
+  - name: last_reviewed
+    required: false
+    type: date
+    format: YYYY-MM-DD
+    description: >
+      ISO date. Refreshed when Caleb confirms the wiki is still
+      accurate. Optional in v2 (v2 wikis may omit this).
+
+  - name: points_earned
+    required: false
+    type: integer
+    minimum: 0
+    description: >
+      Cumulative integer. Required in v1. Optional in v2 (v2 wikis
+      may track scoring externally).
+
+  - name: points_breakdown
+    required: false
+    type: list
+    item_schema:
+      type: string
+      format: "<description>: +N"
+    default: []
+    description: >
+      Cumulative list of strings, one entry per point source across
+      the wiki's full history. Required in v1. Optional in v2.
+
+  - name: actions_taken
+    required: false
+    type: integer
+    minimum: 0
+    default: 0
+    description: >
+      Count of agent actions. Required in v1. Optional in v2.
+
+  - name: quiz_history
+    required: false
+    type: list
+    item_schema:
+      date: { type: date, format: YYYY-MM-DD }
+      result: { type: string, allowed: [correct, incorrect, shifted] }
+    default: []
+    description: >
+      List of quiz attempts. Required in v1. Optional in v2.
+
+  - name: open_questions
+    required: false
+    type: list
+    item_schema:
+      type: string
+    default: []
+    description: >
+      List of strings. Things Caleb doesn't know yet. Required in v1.
+      Optional in v2.
+
+# --- v1-specific fields ---
+
+  - name: stage
+    required: false
+    type: string
+    allowed: [seedling, budding, evergreen, archived]
+    description: >
+      v1: Development stage (digital-garden convention).
+      seedling   — provisional, single source, first-attempt thinking.
+      budding    — thought through but has gaps; actively being developed.
+      evergreen  — settled; Caleb would defend this.
+      archived   — superseded; content consolidated elsewhere. Kept for reference.
+      v2: Replaced by 'status'. Either is valid.
+
+  - name: created
+    required: false
+    type: date
+    format: YYYY-MM-DD
+    description: >
+      v1: ISO date, set once on creation. Never changes.
+      v2: Replaced by 'created_at'. Either is valid.
+
+  - name: updated
+    required: false
+    type: date
+    format: YYYY-MM-DD or YYYY-MM-DDTHH:MM
+    description: >
+      v1: ISO date, refreshed on every meaningful content change.
+      Accepts YYYY-MM-DD or YYYY-MM-DDTHH:MM (datetime).
+      v2: Replaced by 'updated_at'. Either is valid.
+
+  - name: source
+    required: false
+    type: string
+    allowed: [question-game, ingestion, manual, background-research]
+    description: >
+      v1: How the page came into existence.
+      v2: Replaced by 'source_origin'. Either is valid.
+
+  - name: source_of_question
+    required: false
+    type: string
+    allowed: [natural, suggested-by-agent]
+    description: >
+      v1: How the question was asked.
+      v2: Replaced by 'source_origin'. Either is valid.
+
+# --- v2-specific fields ---
+
+  - name: schema_version
+    required: false
+    type: integer
+    minimum: 1
+    description: >
+      v2: Schema version identifier. Optional — v1 wikis omit this,
+      v2 wikis set to 2. Defaults conceptually to 1 for v1.
+
+  - name: status
+    required: false
+    type: string
+    allowed: [draft, reviewed, published]
+    description: >
+      v2: Publication status. Replaces v1's 'stage'.
+      draft     — in progress, not reviewed.
+      reviewed  — reviewed and settled.
+      published — published to public game.
+
+  - name: created_at
+    required: false
+    type: datetime
+    format: YYYY-MM-DD HH:MM:SS
+    description: >
+      v2: ISO datetime, set once on creation. Replaces v1's 'created'.
+      Either 'created_at' or 'created' is required.
+
+  - name: updated_at
+    required: false
+    type: datetime
+    format: YYYY-MM-DD HH:MM:SS
+    description: >
+      v2: ISO datetime. Replaces v1's 'updated'. Either is valid.
+
+  - name: source_origin
+    required: false
+    type: string
+    allowed: [organic, recommended]
+    description: >
+      v2: How the question was born. Replaces v1's 'source' +
+      'source_of_question'. 'organic' = Caleb asked directly.
+      'recommended' = agent suggested it.
+
+  - name: canonical_question_id
+    required: false
+    type: string
+    allowed: free_form
+    description: >
+      v2: Unique stable identifier for the canonical question this
+      wiki belongs to. Set when published to public game or when
+      the wiki targets a canonical question.
+
+  - name: canonical_question_text
+    required: false
+    type: string
+    allowed: free_form
+    description: >
+      v2: The text of the canonical question being answered. Optional
+      by default — only present when the wiki targets a canonical
+      question.
+
+  - name: author_signature
+    required: false
+    type: string
+    allowed: free_form
+    description: >
+      v2: GPG key identifier for public game attribution. Optional
+      — only present when the wiki is published to public game.
+
+  - name: evidence
+    required: false
+    type: list
+    item_schema:
+      type: object
+    default: []
+    description: >
+      v2: Structured evidence block. Optional — only present on v2
+      wikis. Each entry has id, type, summary, ref.
+
+  - name: suggested_next_questions
+    required: false
+    type: list
+    item_schema:
+      type: string
+    default: []
+    description: >
+      v2: List of follow-up question slugs or IDs. Optional — only
+      present on v2 wikis.
+
+  - name: creator
+    required: false
+    type: string
+    allowed: [human, human-with-ai, ai-agent]
+    default: human-with-ai
+    description: >
+      Provenance field. Who created this wiki.
+      human            — entirely human-written, no AI assistance.
+      human-with-ai    — human wrote thinking, AI assisted research/formatting.
+      ai-agent         — AI generated the wiki draft for human review.
+      Optional — defaults to 'human-with-ai' when absent.
+
+  - name: needs_review
+    required: false
+    type: boolean
+    default: false
+    description: >
+      Provenance field. Flag for AI-generated wikis that need human
+      review before they should be treated as authoritative.
+      true  — AI draft, needs human vetting.
+      false — human has reviewed and confirmed accuracy.
+      Optional — defaults to false when absent.
+
+  - name: ai_pipeline
+    required: false
+    type: string
+    allowed: free_form
+    description: >
+      Provenance field. Name/version of the AI pipeline that generated
+      this wiki, e.g. 'research-v1'. Only meaningful when creator
+      is 'ai-agent'. Optional — absent for human-created wikis.
+
+  - name: archived_reason
+    required: false
+    type: string
+    allowed: free_form
+    description: >
+      Archival reason. Present only when stage is 'archived'. Explains why
+      the wiki was archived and where its content was consolidated.
+
+  - name: project
+    required: false
+    type: string
+    allowed: free_form
+    description: >
+      Project slug that this wiki belongs to. Used for cross-wiki
+      grouping within a topic. Optional — only present when a wiki
+      targets a specific project.
+
+  - name: tags
+    required: false
+    type: list
+    item_schema:
+      type: string
+    default: []
+    description: >
+      Free-form string tags for search and filtering. Optional.
+
+  - name: public_game
+    required: false
+    type: object
+    description: >
+      Public competitive game fields. Only present when a wiki has
+      been published to the public layer. Optional by default.
+    properties:
+      published:
+        type: boolean
+        default: false
+        description: Whether this wiki has been published to the
+          public competitive layer.
+      canonical_question_id:
+        type: string
+        required: false
+        description: Unique stable identifier for the canonical
+          question this wiki belongs to. Set when published.
+      public_rank:
+        type: integer
+        required: false
+        description: Current public rank (1-10 means top-10 visible;
+          null means unranked). Updated by the ranking system.
+      judgment_count:
+        type: integer
+        default: 0
+        description: Number of judgment reviews this wiki has
+          received from other users.
+      avg_judgment_score:
+        type: number
+        required: false
+        description: Average structured judgment score across all
+          dimensions (accuracy, clarity, completeness, bias).
+      anonymous_contributions:
+        type: integer
+        default: 0
+        description: Count of anonymous users who joined and
+          contributed to the aggregate data for this wiki.
+      last_published:
+        type: date
+        required: false
+        description: ISO date of the most recent publication or
+          re-publication event.
+
+# --- Field groups for cross-validation ---
+#
+# v1 required set: type=wiki, stage, created, updated, last_reviewed,
+#                   source, source_of_question, quiz_history,
+#                   points_earned, points_breakdown, actions_taken,
+#                   open_questions
+#
+# v2 required set: category, topic, status, created_at, updated_at,
+#                   source_origin
+#                   (type, schema_version, canonical_question_id,
+#                    canonical_question_text, evidence,
+#                    suggested_next_questions are optional)
+# Body section structure is prose-level (headers and what goes under
+# each) and lives in vault_map.md and play-question-game.md. It is
+# not unified here because it is free-form content, not closed-set
+# schema.
