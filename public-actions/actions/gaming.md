@@ -1,11 +1,10 @@
 ---
 action: "gaming"
-total_participants: 1
-total_entries: 1
-total_duration_minutes: 100
-per_location: "{'Cedar City, UT': {'total_entries': 1, 'total_duration': 100, 'unique_dates': ['2026-06-18']}}"
+total_participants: 2
+total_entries: 2
+total_duration_minutes: 150
+per_location: "{'Cedar City, UT': {'total_entries': 2, 'total_duration': 150, 'unique_dates': ['2026-04-16', '2026-05-17']}}"
 slug: "gaming"
-first_reporter: "HappyBrain"
 ---
 
 ## About

@@ -1,0 +1,9 @@
+{"action_id": "afternoon-decompression", "date": "2026-05-17", "duration": 30, "location": "Cedar City, UT", "time_bucket": "afternoon", "weekday": 6}
+{"action_id": "project-work", "date": "2026-05-17", "duration": 135, "location": "Cedar City, UT", "time_bucket": "morning", "weekday": 6}
+{"action_id": "project-work", "date": "2026-05-17", "duration": 150, "location": "Cedar City, UT", "time_bucket": "afternoon", "weekday": 6}
+{"action_id": "disc-golf-putting", "date": "2026-05-17", "duration": 30, "location": "Cedar City, UT", "time_bucket": "morning", "weekday": 6}
+{"action_id": "disc-golf-putting", "date": "2026-05-17", "duration": 30, "location": "Cedar City, UT", "time_bucket": "afternoon", "weekday": 6}
+{"action_id": "gaming", "date": "2026-05-17", "duration": 90, "location": "Cedar City, UT", "time_bucket": "morning", "weekday": 6}
+{"action_id": "lunch", "date": "2026-05-17", "duration": 90, "location": "Cedar City, UT", "time_bucket": "afternoon", "weekday": 6}
+{"action_id": "morning-personal-reset", "date": "2026-05-17", "duration": 30, "location": "Cedar City, UT", "time_bucket": "morning", "weekday": 6}
+{"action_id": "morning-rituals", "date": "2026-05-17", "duration": 75, "location": "Cedar City, UT", "time_bucket": "dawn", "weekday": 6}

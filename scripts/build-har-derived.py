@@ -77,6 +77,7 @@ def read_entry(path: Path) -> dict[str, Any]:
         "has_notes": bool(notes),
         "notes": notes,
         "stem": path.stem,
+        "public_action_id": str(fm.get("public_action_id", "")).strip(),
     }
 
 
@@ -8246,6 +8247,7 @@ def write_json_data(entries: list[dict], config: dict) -> None:
             "computed_stats": _compute_structured_stats([cf]),
             "notes_preview": (e["notes"][:120] + "…") if len(e["notes"]) > 120 else e["notes"],
             "notes_body": e["notes"],
+            "public_action_id": e.get("public_action_id", ""),
         })
     # Add plan-only days (future dates with no entries yet)
     for plan_date in plans_summary:

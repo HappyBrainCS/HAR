@@ -1,0 +1,14 @@
+{"action_id": "nap", "date": "2026-05-04", "duration": 120, "location": "Cedar City, UT", "time_bucket": "afternoon", "weekday": 0}
+{"action_id": "morning-relaxation", "date": "2026-05-04", "duration": 30, "location": "Cedar City, UT", "time_bucket": "afternoon", "weekday": 0}
+{"action_id": "project-work", "date": "2026-05-04", "duration": 120, "location": "Cedar City, UT", "time_bucket": "morning", "weekday": 0}
+{"action_id": "project-work", "date": "2026-05-04", "duration": 120, "location": "Cedar City, UT", "time_bucket": "morning", "weekday": 0}
+{"action_id": "project-work", "date": "2026-05-04", "duration": 90, "location": "Cedar City, UT", "time_bucket": "afternoon", "weekday": 0}
+{"action_id": "project-work", "date": "2026-05-04", "duration": 90, "location": "Cedar City, UT", "time_bucket": "evening", "weekday": 0}
+{"action_id": "dinner", "date": "2026-05-04", "duration": 90, "location": "Cedar City, UT", "time_bucket": "evening", "weekday": 0}
+{"action_id": "disc-golf-putting", "date": "2026-05-04", "duration": 10, "location": "Cedar City, UT", "time_bucket": "evening", "weekday": 0}
+{"action_id": "evening-wind-down", "date": "2026-05-04", "duration": 60, "location": "Cedar City, UT", "time_bucket": "night", "weekday": 0}
+{"action_id": "lunch", "date": "2026-05-04", "duration": 120, "location": "Cedar City, UT", "time_bucket": "afternoon", "weekday": 0}
+{"action_id": "morning-relaxation", "date": "2026-05-04", "duration": 40, "location": "Cedar City, UT", "time_bucket": "morning", "weekday": 0}
+{"action_id": "morning-relaxation", "date": "2026-05-04", "duration": 60, "location": "Cedar City, UT", "time_bucket": "dawn", "weekday": 0}
+{"action_id": "workout-burst", "date": "2026-05-04", "duration": 20, "location": "Cedar City, UT", "time_bucket": "morning", "weekday": 0}
+{"action_id": "workout-burst", "date": "2026-05-04", "duration": 20, "location": "Cedar City, UT", "time_bucket": "evening", "weekday": 0}
