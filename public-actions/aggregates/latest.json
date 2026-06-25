@@ -1,11 +1,14 @@
 {
-  "generated": "2026-06-25T15:30:37.717424",
-  "total_entries": 36,
-  "total_duration_minutes": 2610,
-  "total_participants": 8,
+  "generated": "2026-06-25T16:07:58.299675",
+  "total_entries": 51,
+  "total_duration_minutes": 3750,
+  "total_participants": 10,
+  "contributors": [
+    "happybrain"
+  ],
   "date_range": {
     "start": "2026-04-16",
-    "end": "2026-05-17"
+    "end": "2026-06-19"
   },
   "by_action": [
     {
@@ -15,10 +18,16 @@
       "total_participants": 1
     },
     {
-      "action_id": "dinner",
+      "action_id": "afternoon-reset",
       "total_entries": 1,
-      "total_duration_minutes": 90,
+      "total_duration_minutes": 15,
       "total_participants": 1
+    },
+    {
+      "action_id": "dinner",
+      "total_entries": 2,
+      "total_duration_minutes": 170,
+      "total_participants": 2
     },
     {
       "action_id": "disc-golf-putting",
@@ -34,15 +43,21 @@
     },
     {
       "action_id": "gaming",
-      "total_entries": 2,
-      "total_duration_minutes": 150,
-      "total_participants": 2
+      "total_entries": 3,
+      "total_duration_minutes": 250,
+      "total_participants": 3
     },
     {
       "action_id": "lunch",
-      "total_entries": 3,
-      "total_duration_minutes": 330,
-      "total_participants": 3
+      "total_entries": 4,
+      "total_duration_minutes": 485,
+      "total_participants": 4
+    },
+    {
+      "action_id": "mid-morning-reset",
+      "total_entries": 1,
+      "total_duration_minutes": 30,
+      "total_participants": 1
     },
     {
       "action_id": "morning-personal-reset",
@@ -58,9 +73,9 @@
     },
     {
       "action_id": "morning-rituals",
-      "total_entries": 1,
-      "total_duration_minutes": 75,
-      "total_participants": 1
+      "total_entries": 4,
+      "total_duration_minutes": 215,
+      "total_participants": 3
     },
     {
       "action_id": "nap",
@@ -70,9 +85,9 @@
     },
     {
       "action_id": "project-work",
-      "total_entries": 9,
-      "total_duration_minutes": 1080,
-      "total_participants": 5
+      "total_entries": 13,
+      "total_duration_minutes": 1665,
+      "total_participants": 7
     },
     {
       "action_id": "social-hangout",
@@ -82,17 +97,17 @@
     },
     {
       "action_id": "workout-burst",
-      "total_entries": 7,
-      "total_duration_minutes": 240,
-      "total_participants": 3
+      "total_entries": 10,
+      "total_duration_minutes": 275,
+      "total_participants": 4
     }
   ],
   "by_location": [
     {
       "location": "Cedar City, UT",
-      "total_entries": 36,
-      "total_duration_minutes": 2610,
-      "total_participants": 8
+      "total_entries": 51,
+      "total_duration_minutes": 3750,
+      "total_participants": 10
     }
   ]
 }

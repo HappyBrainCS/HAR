@@ -1,0 +1,48 @@
+# HAR Public Actions — Auto Reindex
+#
+# Runs after every push/merge to main. Rebuilds the action registry
+# (actions/*.md) and aggregates (aggregates/*.json) from all contributor
+# entry files under entries/.
+#
+# This ensures:
+# - Action files always reflect all contributions
+# - The lightweight registry index is always current
+# - Contributors' PRs never need to touch aggregates/ or actions/
+
+name: Reindex
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "entries/**/*.jsonl"
+
+jobs:
+  reindex:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run reindex
+        run: python3 scripts/har-reindex.py
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "HAR Reindex Bot"
+          git config user.email "reindex@har.local"
+          git add actions/ aggregates/
+          if git diff --cached --quiet; then
+            echo "No aggregate changes to commit."
+          else
+            git commit -m "Auto-reindex: rebuild aggregates from latest entries"
+            git push
+          fi

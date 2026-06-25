@@ -1,20 +1,17 @@
 ---
-action: "Dinner and Relaxation"
-total_participants: 1
-total_entries: 1
-total_duration_minutes: 90
+action: "Dinner"
+total_participants: 2
+total_entries: 2
+total_duration_minutes: 170
 per_location:
   Cedar City, UT:
-    total_entries: 1
-    total_duration: 90
+    total_entries: 2
+    total_duration: 170
     unique_dates:
       - "2026-05-04"
+      - "2026-06-18"
 slug: "dinner"
 ---
 
 ## About
-
-This action is contributed through HAR's opt-in public record system.
-
-first-reporter: HappyBrain
 

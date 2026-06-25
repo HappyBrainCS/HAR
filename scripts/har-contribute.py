@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 from collections import defaultdict
@@ -520,21 +521,35 @@ def _update_action_file(
 def _write_entry_line(
     public_actions_dir: Path,
     entry: dict[str, Any],
+    contributor_id: str = "",
 ) -> Path:
-    """Write one anonymized entry line to the date-based JSONL file.
+    """Write one anonymized entry line to the per-contributor JSONL file.
+
+    Contributors each have their own directory under entries/ so that
+    fork-and-PR contributions never cause merge conflicts. The structure is:
+
+        entries/{contributor_id}/YYYY/MM/YYYY-MM-DD.jsonl
+
+    If no contributor_id is given, uses "local" as a fallback.
 
     Returns the path to the written file.
     """
     date_str = entry.get("date", "")
     if not date_str:
-        return None  # skip entries without dates
+        return None
 
     try:
         dt = date.fromisoformat(date_str)
     except ValueError:
         return None
 
-    entry_dir = public_actions_dir / "entries" / str(dt.year) / f"{dt.month:02d}"
+    cid = contributor_id.strip() if contributor_id else "local"
+    # Sanitize contributor ID to be filesystem-safe
+    cid = re.sub(r"[^a-zA-Z0-9_\-]", "-", cid).strip("-")
+    if not cid:
+        cid = "anonymous"
+
+    entry_dir = public_actions_dir / "entries" / cid / str(dt.year) / f"{dt.month:02d}"
     entry_dir.mkdir(parents=True, exist_ok=True)
 
     entry_file = entry_dir / f"{date_str}.jsonl"
@@ -964,6 +979,14 @@ def main() -> int:
         help="Print the action registry index as JSON to stdout (no writes). "
              "Agents use this for cheap activity matching. Requires --data-dir or default path.",
     )
+    parser.add_argument(
+        "--contributor",
+        type=str,
+        default="",
+        metavar="ID",
+        help="Contributor ID for per-contributor entry directories. "
+             "Use your GitHub username. Defaults to 'local'.",
+    )
     args = parser.parse_args()
 
     # ---- Determine paths ----
@@ -1092,7 +1115,7 @@ def main() -> int:
     print("\nWriting entry lines...")
     written_files: set[Path] = set()
     for entry in anon_entries:
-        result_path = _write_entry_line(public_actions_dir, entry)
+        result_path = _write_entry_line(public_actions_dir, entry, args.contributor)
         if result_path:
             written_files.add(result_path)
 
@@ -1110,14 +1133,22 @@ def main() -> int:
 
     print(f"  Updated {len(updated_actions)} action files.")
 
-    # ---- Step 7: Update global aggregates ----
-    print("Updating global aggregates...")
-    _update_global_aggregates(public_actions_dir, anon_entries)
-    print("  Updated aggregate files.")
-
-    # ---- Step 7b: Rebuild registry index ----
-    _build_registry_index(public_actions_dir)
-    print("  Rebuilt action registry index.")
+    # ---- Step 7: Run reindex to rebuild actions/aggregates from all entries ----
+    print("Rebuilding action registry and aggregates...")
+    try:
+        import subprocess
+        reindex_path = HAR_ROOT / "scripts" / "har-reindex.py"
+        result = subprocess.run(
+            [sys.executable, str(reindex_path), "--data-dir", str(public_actions_dir)],
+            capture_output=True, text=True, timeout=60
+        )
+        if result.returncode == 0:
+            for line in result.stdout.strip().split("\n"):
+                print(f"  {line}")
+        else:
+            print(f"  Reindex failed: {result.stderr[:200]}", file=sys.stderr)
+    except Exception as e:
+        print(f"  Warning: could not run reindex: {e}", file=sys.stderr)
 
     # ---- Step 8: Git operations ----
     if args.push:
@@ -1127,6 +1158,8 @@ def main() -> int:
     else:
         print("\nChanges are local. Use --push to commit and push to GitHub.")
         print(f"Review changes in: {public_actions_dir}")
+        print("Run the reindex script to rebuild aggregates:")
+        print(f"  python3 scripts/har-reindex.py")
 
     print("\nDone.")
     return 0

@@ -15,7 +15,5 @@ first_reporter: "HappyBrain"
 
 ## About
 
-This action is contributed through HAR's opt-in public record system.
-
-first-reporter: HappyBrain
+First reported by: HappyBrain
 

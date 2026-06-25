@@ -15,9 +15,9 @@
   },
   {
     "slug": "dinner",
-    "title": "Dinner and Relaxation",
-    "total_entries": 1,
-    "total_participants": 1
+    "title": "Dinner",
+    "total_entries": 2,
+    "total_participants": 2
   },
   {
     "slug": "disc-golf-putting",
@@ -28,7 +28,7 @@
   },
   {
     "slug": "evening-wind-down",
-    "title": "Evening Wind Down and Sleep",
+    "title": "Evening Wind Down",
     "total_entries": 1,
     "total_participants": 1,
     "first_reporter": "HappyBrain"
@@ -36,18 +36,18 @@
   {
     "slug": "gaming",
     "title": "Gaming",
-    "total_entries": 2,
-    "total_participants": 2
-  },
-  {
-    "slug": "lunch",
-    "title": "Lunch and Relaxation",
     "total_entries": 3,
     "total_participants": 3
   },
   {
+    "slug": "lunch",
+    "title": "Lunch",
+    "total_entries": 4,
+    "total_participants": 4
+  },
+  {
     "slug": "mid-morning-reset",
-    "title": "Mid-morning Reset",
+    "title": "Mid Morning Reset",
     "total_entries": 1,
     "total_participants": 1,
     "first_reporter": "HappyBrain"
@@ -68,9 +68,9 @@
   },
   {
     "slug": "morning-rituals",
-    "title": "Morning Rituals and Wind-down",
-    "total_entries": 1,
-    "total_participants": 1
+    "title": "Morning Rituals",
+    "total_entries": 4,
+    "total_participants": 3
   },
   {
     "slug": "nap",
@@ -82,8 +82,8 @@
   {
     "slug": "project-work",
     "title": "Project Work",
-    "total_entries": 9,
-    "total_participants": 5
+    "total_entries": 13,
+    "total_participants": 7
   },
   {
     "slug": "social-hangout",
@@ -95,7 +95,7 @@
   {
     "slug": "workout-burst",
     "title": "Workout Burst",
-    "total_entries": 7,
-    "total_participants": 3
+    "total_entries": 10,
+    "total_participants": 4
   }
 ]

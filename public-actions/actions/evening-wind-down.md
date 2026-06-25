@@ -1,5 +1,5 @@
 ---
-action: "Evening Wind Down and Sleep"
+action: "Evening Wind Down"
 total_participants: 1
 total_entries: 1
 total_duration_minutes: 60
@@ -15,7 +15,5 @@ first_reporter: "HappyBrain"
 
 ## About
 
-This action is contributed through HAR's opt-in public record system.
-
-first-reporter: HappyBrain
+First reported by: HappyBrain
 

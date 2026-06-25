@@ -1,20 +1,18 @@
 ---
-action: "Morning Rituals and Wind-down"
-total_participants: 1
-total_entries: 1
-total_duration_minutes: 75
+action: "Morning Rituals"
+total_participants: 3
+total_entries: 4
+total_duration_minutes: 215
 per_location:
   Cedar City, UT:
-    total_entries: 1
-    total_duration: 75
+    total_entries: 4
+    total_duration: 215
     unique_dates:
       - "2026-05-17"
+      - "2026-06-18"
+      - "2026-06-19"
 slug: "morning-rituals"
 ---
 
 ## About
-
-This action is contributed through HAR's opt-in public record system.
-
-first-reporter: HappyBrain
 

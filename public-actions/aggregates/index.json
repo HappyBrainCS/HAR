@@ -1,7 +1,10 @@
 {
-  "generated": "2026-06-25T15:30:37.717501",
-  "summary": "36 entries \u00b7 2610 minutes \u00b7 8 contributing days",
-  "total_entries": 36,
-  "total_duration_minutes": 2610,
-  "total_participants": 8
+  "generated": "2026-06-25T16:07:58.299773",
+  "summary": "51 entries \u00b7 3750 minutes \u00b7 10 contributing days \u00b7 1 contributors",
+  "total_entries": 51,
+  "total_duration_minutes": 3750,
+  "total_participants": 10,
+  "contributors": [
+    "happybrain"
+  ]
 }

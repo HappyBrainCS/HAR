@@ -245,31 +245,73 @@ The script (`python3 scripts/har-contribute.py`):
 
 1. Reads all calendar entries that have a `public_action_id` set
 2. Anonymizes each entry — strips notes, stats, exact times, activity names
-3. Extracts exercise names from `custom_fields` as tags (for future matching)
+3. Extracts exercise names from `custom_fields` as tags (stored in action registry)
 4. Deduplicates against existing entries (by date + action_id + duration + time_bucket)
-5. Writes JSONL lines to date-based entry files
-6. Updates action registry files with aggregate stats and exercise tags
-7. Rebuilds the lightweight action registry index
-8. Commits and pushes to GitHub
+5. Writes JSONL lines to `entries/{contributor_id}/YYYY/MM/YYYY-MM-DD.jsonl`
+6. Runs `har-reindex.py` to rebuild action registry and aggregates from all contributors
+7. Commits and pushes to GitHub
+
+### Per-Contributor Entry Structure
+
+Every contributor gets their own directory under `entries/`:
+
+```
+entries/
+  happybrain/          ← Your contributor ID
+    2026/06/
+      2026-06-25.jsonl  ← Your anonymized entries for that date
+  player2/             ← Another contributor (added via PR)
+    2026/07/
+      2026-07-01.jsonl
+```
+
+This means **no one ever shares a file**. Fork-and-PR contributions never
+cause merge conflicts.
 
 ### Pipeline Commands
 
 ```bash
 # Dry run — see what would be contributed (no writes)
-python3 scripts/har-contribute.py --dry-run
+python3 scripts/har-contribute.py --contributor your-github-username --dry-run
 
-# Full contribution + push to GitHub
-python3 scripts/har-contribute.py --push
-
-# Only rebuild the action registry index (after pulling latest changes)
-python3 scripts/har-contribute.py --build-index
+# Full contribution + push (repo owner only)
+python3 scripts/har-contribute.py --contributor happybrain --push
 
 # Fetch the action registry index as JSON (for agent matching)
 python3 scripts/har-contribute.py --fetch-index
 
 # Contribute only entries since a specific date
-python3 scripts/har-contribute.py --since 2026-06-01 --push
+python3 scripts/har-contribute.py --contributor happybrain --since 2026-06-01 --push
+
+# Rebuild aggregates from all contributors (after pulling latest from upstream)
+python3 scripts/har-reindex.py
 ```
+
+### Fork + PR Workflow (for External Contributors)
+
+Since contributors don't have write access to the main repo, they use a fork:
+
+1. Fork `HappyBrainCS/HAR` to your GitHub account
+2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/HAR.git ~/HAR`
+3. Set up your private calendar (same as Quick Start above)
+4. Set env vars and opt into the public record
+5. Run the pipeline pointed at your fork:
+   ```bash
+   python3 scripts/har-contribute.py --contributor YOUR_GITHUB_USERNAME --data-dir ~/HAR/public-actions
+   ```
+6. Push to your fork:
+   ```bash
+   cd ~/HAR
+   git add public-actions/entries/YOUR_GITHUB_USERNAME/
+   git commit -m "Contribute anonymized entries"
+   git push
+   ```
+7. Create a Pull Request from your fork to `HappyBrainCS/HAR`
+8. When merged, the Reindex GitHub Action automatically rebuilds the
+   action registry and aggregates — you don't need to do anything else
+
+**Your fork is just a tool.** It sits on your GitHub account and you use it
+whenever you want to contribute new data. No one else touches your files.
 
 ### Evidence Links
 
