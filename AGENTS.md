@@ -161,17 +161,108 @@ HAR_PUBLIC_CONTRIBUTE=true          # Set to opt in
 HAR_PUBLIC_LOCATION="Cedar City, UT"  # Location for anonymized data
 HAR_PUBLIC_DISPLAY_NAME="HappyBrain"  # First-reporter credit (optional)
 ```
+## Opt-In Public Record (if configured)
+
+If the user has opted in to public contributions, HAR can contribute anonymized data
+to a public action record. This creates a crowdsourced dataset of real human behavior
+— by action type, location, and time of day.
+
+### How to Opt In
+
+```bash
+# Set the environment variable
+HAR_PUBLIC_CONTRIBUTE=true
+
+# Optional: add your location for local stats
+HAR_PUBLIC_LOCATION="Cedar City, UT"
+
+# Optional: choose a display name for first-reporter credit
+# Most users skip this — location-only contribution is the default
+HAR_PUBLIC_DISPLAY_NAME="YourName"
+
+# Run the pipeline
+python3 scripts/har-contribute.py --dry-run  # See what would be shared
+python3 scripts/har-contribute.py --push     # Actually contribute
+```
+
+### What Gets Shared vs. What Stays Private
+
+| Shared | Not Shared |
+|--------|------------|
+| Action slug (`disc-golf-putting`) | Your name (unless you opt in) |
+| Duration in minutes (`30`) | Exact activity name (`Disc Golf Practice Putting`) |
+| Day of week (integer) | Notes field (entirely stripped) |
+| Time-of-day bucket (`morning`) | Stats (reps, scores, custom fields) |
+| Location (if you set it) | Any text content |
+
+### Per-Entry Opt-In
+
+The agent assigns a `public_action_id` to every entry it writes. This is how
+the pipeline knows which activities to contribute. You have full control:
+
+- **Most entries are safe to share** — workouts, project work, gaming, eating, sleeping, social time.
+  These make the dataset honest and valuable.
+- **Sensitive entries get excluded** — if an activity involves genuinely private behavior
+  (specific personal activities), the agent simply doesn't assign a `public_action_id`.
+  The pipeline only contributes entries that have one.
+- **Ask the user on first capture** — "Do you want this activity in the public record?"
+- **Use discretion** — discreet naming ("Morning Rituals and Wind-down") is fine for the
+  local calendar, but if the activity is something the user wouldn't want linked to their
+  location or data, drop the `public_action_id` entirely.
 
 ### How It Works
 
-1. **Before writing an entry**, check the public action registry (a public GitHub repo with action slugs).
-2. **Match the activity** to an existing action slug. If the activity maps to an existing slug (e.g., "disc golf putting practice" → `disc-golf-putting-practice`), use that `public_action_id`.
-3. **If no match exists**, create a new action slug. The user becomes the first reporter for that activity.
-4. **After writing the entry**, run `python3 scripts/har-contribute.py` to push anonymized data to the public registry.
+The pipeline (`scripts/har-contribute.py`):
 
-### What Gets Contributed
+1. Reads all calendar entries that have a `public_action_id` set
+2. Anonymizes each entry — strips notes, stats, exact times, activity names
+3. Matches each entry to the action registry (or creates a new action type)
+4. Writes a JSONL line to the date-based entry file
+5. Updates aggregate stats per action and globally
+6. Commits and pushes to GitHub
 
-Anonymized snapshot data — the activity name, duration, category, and location. No personal identifiers, no full notes, no identifiable timestamps beyond date. See `action-registry-spec.md` for the full schema.
+### Evidence Links
+
+Users can optionally include evidence links in their entries to back up public claims.
+Evidence is always URLs — never uploaded files. The philosophy is simple:
+
+> *To keep HAR free and scalable, evidence is link-based. If you want to show
+> a photo, video, scorecard, or tournament result, host it yourself and link it.*
+
+Evidence links go in the entry's frontmatter:
+
+```yaml
+custom_fields:
+  evidence:
+    - type: url
+      label: "UDisc Scorecard — Thunderbird Garden Round"
+      url: "https://udisc.com/rounds/abc123"
+```
+
+Evidence is **not** contributed to the public record (it's too identifying). It lives
+in your personal calendar files and can be referenced by your agent when you ask
+questions or make claims.
+
+### Onboarding a New Contributor
+
+When a user first opts in, the agent should:
+
+1. **Explain what gets shared** — show the table above. Be honest, not salesy.
+2. **Ask about existing data** — "You already have N entries. Do you want to contribute
+   them to the public record? I'll walk through the activity types."
+3. **Flag anything sensitive** — "Activities like [X] are set to contribute. Does
+   anything here feel private? I can leave those out."
+4. **Remind about location and name** — "I'll use [location] for location data.
+   Your name stays out unless you want first-reporter credit on specific actions."
+5. **Run the pipeline** — dry-run first, then the real thing.
+
+### Environment Variables
+
+```
+HAR_PUBLIC_CONTRIBUTE=true          # Required — opt in
+HAR_PUBLIC_LOCATION="Cedar City, UT"  # Optional — for location breakdowns
+HAR_PUBLIC_DISPLAY_NAME="HappyBrain"  # Optional — first-reporter credit
+```
 
 ## Build & Serve
 

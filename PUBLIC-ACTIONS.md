@@ -17,6 +17,7 @@ No notes. No names. No exact times. Just: "someone in Cedar City did project wor
 | Day of week | ✅ | `4` (Thursday) |
 | Time of day bucket | ✅ | `morning` |
 | Location (city/region) | ⬜ Only if you set it | `Cedar City, UT` |
+| Display name | ⬜ Only if you set it | `HappyBrain` |
 
 ## What Never Gets Shared
 
@@ -26,6 +27,54 @@ No notes. No names. No exact times. Just: "someone in Cedar City did project wor
 - Any names, places, app names, company names
 - Stats (reps, pages, scores)
 - Any text content
+- Evidence links (too identifying — stay in your personal calendar)
+
+## Per-Entry Opt-In
+
+Contribution is per-entry, not all-or-nothing. Each calendar entry has a
+`public_action_id` field. Only entries with this field set get contributed.
+
+- **Most activities are safe to share** — work, exercise, gaming, meals, sleep.
+  These make the public dataset honest and valuable.
+- **Sensitive activities get no `public_action_id`** — if an entry covers genuinely
+  private behavior, the agent simply doesn't assign one. The pipeline skips those entries.
+- **You control the boundary** — tell your agent what's private and what isn't.
+
+## Evidence Links
+
+HAR supports evidence links — URLs that back up claims made about an activity.
+For example, a disc golf round can link to a UDisc scorecard, or a tournament
+result can link to PDGA standings.
+
+Evidence links are **never shared to the public record**. They're too identifying.
+They live in your personal calendar files and are available to your agent when
+you ask questions or make claims.
+
+### How to Use Evidence
+
+Add evidence to the `custom_fields` of any entry:
+
+```yaml
+custom_fields:
+  evidence:
+    - type: url
+      label: "UDisc Scorecard — Thunderbird Garden Round"
+      url: "https://udisc.com/rounds/abc123"
+    - type: url
+      label: "Cedar City Open 2026 Results"
+      url: "https://pdga.com/tournament/xyz"
+```
+
+### Why Links Only
+
+To keep HAR free and scalable, evidence is URL-based only. No file uploads,
+no images in the repo, no video hosting. If you want to share a photo or video,
+host it yourself (Imgur, Google Photos, YouTube, etc.) and link to it.
+
+This keeps:
+- The HAR repo small (no binary blobs)
+- The pipeline fast (no large file transfers)
+- The public record clean (no identifying attachments)
 
 ## How to Opt In
 
