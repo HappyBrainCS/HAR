@@ -1,0 +1,101 @@
+[
+  {
+    "slug": "afternoon-decompression",
+    "title": "Afternoon Decompression",
+    "total_entries": 1,
+    "total_participants": 1,
+    "first_reporter": "HappyBrain"
+  },
+  {
+    "slug": "afternoon-reset",
+    "title": "Afternoon Reset",
+    "total_entries": 1,
+    "total_participants": 1,
+    "first_reporter": "HappyBrain"
+  },
+  {
+    "slug": "dinner",
+    "title": "Dinner and Relaxation",
+    "total_entries": 1,
+    "total_participants": 1
+  },
+  {
+    "slug": "disc-golf-putting",
+    "title": "Disc Golf Putting",
+    "total_entries": 5,
+    "total_participants": 4,
+    "first_reporter": "HappyBrain"
+  },
+  {
+    "slug": "evening-wind-down",
+    "title": "Evening Wind Down and Sleep",
+    "total_entries": 1,
+    "total_participants": 1,
+    "first_reporter": "HappyBrain"
+  },
+  {
+    "slug": "gaming",
+    "title": "Gaming",
+    "total_entries": 2,
+    "total_participants": 2
+  },
+  {
+    "slug": "lunch",
+    "title": "Lunch and Relaxation",
+    "total_entries": 3,
+    "total_participants": 3
+  },
+  {
+    "slug": "mid-morning-reset",
+    "title": "Mid-morning Reset",
+    "total_entries": 1,
+    "total_participants": 1,
+    "first_reporter": "HappyBrain"
+  },
+  {
+    "slug": "morning-personal-reset",
+    "title": "Morning Personal Reset",
+    "total_entries": 1,
+    "total_participants": 1,
+    "first_reporter": "HappyBrain"
+  },
+  {
+    "slug": "morning-relaxation",
+    "title": "Morning Relaxation",
+    "total_entries": 3,
+    "total_participants": 1,
+    "first_reporter": "HappyBrain"
+  },
+  {
+    "slug": "morning-rituals",
+    "title": "Morning Rituals and Wind-down",
+    "total_entries": 1,
+    "total_participants": 1
+  },
+  {
+    "slug": "nap",
+    "title": "Nap",
+    "total_entries": 1,
+    "total_participants": 1,
+    "first_reporter": "HappyBrain"
+  },
+  {
+    "slug": "project-work",
+    "title": "Project Work",
+    "total_entries": 9,
+    "total_participants": 5
+  },
+  {
+    "slug": "social-hangout",
+    "title": "Social Hangout",
+    "total_entries": 1,
+    "total_participants": 1,
+    "first_reporter": "HappyBrain"
+  },
+  {
+    "slug": "workout-burst",
+    "title": "Workout Burst",
+    "total_entries": 7,
+    "total_participants": 3
+  }
+]

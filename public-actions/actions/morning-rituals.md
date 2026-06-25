@@ -1,9 +1,14 @@
 ---
-action: "morning-rituals"
+action: "Morning Rituals and Wind-down"
 total_participants: 1
 total_entries: 1
 total_duration_minutes: 75
-per_location: "{'Cedar City, UT': {'total_entries': 1, 'total_duration': 75, 'unique_dates': ['2026-05-17']}}"
+per_location:
+  Cedar City, UT:
+    total_entries: 1
+    total_duration: 75
+    unique_dates:
+      - "2026-05-17"
 slug: "morning-rituals"
 ---
 

@@ -152,17 +152,6 @@ This makes capturing feel natural and proactive rather than reactive.
 
 ## Opt-In Public Record (if configured)
 
-If the user has opted in to public contributions, the agent participates in a public action registry.
-
-### Environment Variables
-
-```
-HAR_PUBLIC_CONTRIBUTE=true          # Set to opt in
-HAR_PUBLIC_LOCATION="Cedar City, UT"  # Location for anonymized data
-HAR_PUBLIC_DISPLAY_NAME="HappyBrain"  # First-reporter credit (optional)
-```
-## Opt-In Public Record (if configured)
-
 If the user has opted in to public contributions, HAR can contribute anonymized data
 to a public action record. This creates a crowdsourced dataset of real human behavior
 — by action type, location, and time of day.
@@ -210,16 +199,77 @@ the pipeline knows which activities to contribute. You have full control:
   local calendar, but if the activity is something the user wouldn't want linked to their
   location or data, drop the `public_action_id` entirely.
 
-### How It Works
+### How the Agent Matches Activities
 
-The pipeline (`scripts/har-contribute.py`):
+Before assigning a `public_action_id` to an entry, the agent should check if
+a matching action already exists in the public record. This is how activity
+names converge over time and location-based comparisons become meaningful.
+
+**Fetch the lightweight action registry index:**
+
+```bash
+# One HTTP GET — returns JSON with slug, title, entry count, locations, exercises
+python3 scripts/har-contribute.py --fetch-index
+```
+
+This is cheaper than reading every action file. The index tells you:
+- What actions exist (slug + human-readable title)
+- How many entries each has (popularity hint)
+- Which locations have contributors (for place-based matching)
+- Exercise names associated with workout actions
+
+**Matching logic (agent does this, not the script):**
+
+1. Fetch the index (`--fetch-index` or read `public-actions/aggregates/action-registry-index.json`)
+2. For the user's activity, check if a matching slug exists:
+   - **Direct name match** — "Disc Golf Practice Putting" → search index for "disc-golf", "putting"
+   - **Same location** — if 3+ people in Cedar City log "disc-golf-putting", suggest that name
+   - **Exercise tag match** — if the entry has specific exercises ("Pike Pushups"),
+     check the index for actions with those exercise tags
+   - **New activity** — if nothing matches, create a new slug. The user becomes the first reporter.
+3. Ask the user if they want to use an existing slug or create a new one
+4. Set `public_action_id` to the agreed slug
+
+**Example conversation:**
+
+> *"You did push-ups, squats, and pull-ups. The public record has 'workout-burst'
+> with entries in Cedar City. Three people use that name. Want to add your workout
+> to that action, or create a new one like 'bodyweight-circuit'?"*
+
+This keeps the agent lightweight — it reads one small JSON file instead of
+scanning the entire action registry.
+
+### How the Pipeline Works
+
+The script (`python3 scripts/har-contribute.py`):
 
 1. Reads all calendar entries that have a `public_action_id` set
 2. Anonymizes each entry — strips notes, stats, exact times, activity names
-3. Matches each entry to the action registry (or creates a new action type)
-4. Writes a JSONL line to the date-based entry file
-5. Updates aggregate stats per action and globally
-6. Commits and pushes to GitHub
+3. Extracts exercise names from `custom_fields` as tags (for future matching)
+4. Deduplicates against existing entries (by date + action_id + duration + time_bucket)
+5. Writes JSONL lines to date-based entry files
+6. Updates action registry files with aggregate stats and exercise tags
+7. Rebuilds the lightweight action registry index
+8. Commits and pushes to GitHub
+
+### Pipeline Commands
+
+```bash
+# Dry run — see what would be contributed (no writes)
+python3 scripts/har-contribute.py --dry-run
+
+# Full contribution + push to GitHub
+python3 scripts/har-contribute.py --push
+
+# Only rebuild the action registry index (after pulling latest changes)
+python3 scripts/har-contribute.py --build-index
+
+# Fetch the action registry index as JSON (for agent matching)
+python3 scripts/har-contribute.py --fetch-index
+
+# Contribute only entries since a specific date
+python3 scripts/har-contribute.py --since 2026-06-01 --push
+```
 
 ### Evidence Links
 

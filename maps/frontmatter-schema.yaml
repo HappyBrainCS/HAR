@@ -16,6 +16,14 @@ source: scribe                  # Always "scribe"
 capture_mode: conversational    # Always "conversational"
 custom_fields:                  # Optional — stat tracking
   key: value
+  exercises:                    # List of exercises with sets/reps
+    - name: Pike Pushups        # Exercise name (extracted for public registry tags)
+      sets:
+        - reps: 10
+  evidence:                     # Optional — link-based evidence
+    - type: url
+      label: "UDisc Scorecard"
+      url: "https://udisc.com/rounds/abc123"
 public_action_id: project-work  # Optional — for opt-in public record matching
 ---
 ```

@@ -134,6 +134,38 @@ def _weekday_to_int(weekday_str: str) -> int:
 # Anonymization
 # ---------------------------------------------------------------------------
 
+def _extract_exercise_tags(entry: dict[str, Any]) -> list[str]:
+    """Extract exercise names from an entry's custom_fields.
+
+    Looks for common stat-tracking patterns in custom_fields:
+    - exercises: [{name: "Pike Pushups", ...}, ...]
+    - Any key ending in _exercises or _movements
+    - Free-form stat names that look like exercise names
+
+    Returns a sorted, deduplicated list of exercise name slugs.
+    """
+    exercises: set[str] = set()
+    cf = entry.get("custom_fields", {})
+    if not isinstance(cf, dict):
+        return []
+
+    # Check exercises field
+    for field_key in ["exercises", "movements", "workout_exercises"]:
+        field_val = cf.get(field_key, [])
+        if isinstance(field_val, list):
+            for item in field_val:
+                if isinstance(item, dict):
+                    name = item.get("name", "")
+                    if name:
+                        slug = name.lower().replace(" ", "-").replace("'", "")
+                        exercises.add(slug)
+                elif isinstance(item, str):
+                    slug = item.lower().replace(" ", "-").replace("'", "")
+                    exercises.add(slug)
+
+    return sorted(exercises)
+
+
 def _anonymize_entry(entry: dict[str, Any]) -> dict[str, Any]:
     """Strip personal information from an entry, keeping only public-safe fields.
 
@@ -144,6 +176,7 @@ def _anonymize_entry(entry: dict[str, Any]) -> dict[str, Any]:
         time_bucket
         date (YYYY-MM-DD)
         location (from env if set)
+        exercises (extracted exercise names, for agent matching)
 
     Removed:
         notes_body, custom_fields, exact time, activity name (raw),
@@ -161,6 +194,11 @@ def _anonymize_entry(entry: dict[str, Any]) -> dict[str, Any]:
 
     if location:
         anon["location"] = location
+
+    # Extract exercise tags for richer action registry
+    exercises = _extract_exercise_tags(entry)
+    if exercises:
+        anon["exercises"] = exercises
 
     return anon
 
@@ -303,16 +341,50 @@ def _read_frontmatter(path: Path) -> dict[str, Any]:
 
 def _write_frontmatter(path: Path, frontmatter: dict[str, Any],
                        body: str = "") -> None:
-    """Write frontmatter + body to a markdown file."""
+    """Write frontmatter + body to a markdown file.
+
+    Handles strings, ints, floats, bools, lists, and nested dicts.
+    """
+    def _yaml_val(v: Any, indent: int = 0) -> list[str]:
+        pad = "  " * indent
+        lines: list[str] = []
+        if isinstance(v, dict):
+            if not v:
+                lines.append(f"{pad}{{}}")
+            else:
+                for k, val in v.items():
+                    if isinstance(val, (dict, list)):
+                        lines.append(f"{pad}{k}:")
+                        lines.extend(_yaml_val(val, indent + 1))
+                    elif isinstance(val, bool):
+                        lines.append(f"{pad}{k}: {str(val).lower()}")
+                    elif isinstance(val, (int, float)):
+                        lines.append(f"{pad}{k}: {val}")
+                    elif isinstance(val, str):
+                        lines.append(f"{pad}{k}: \"{val}\"")
+                    else:
+                        lines.append(f"{pad}{k}: {val}")
+        elif isinstance(v, list):
+            if not v:
+                lines.append(f"{pad}[]")
+            else:
+                for item in v:
+                    if isinstance(item, (dict, list)):
+                        lines.append(f"{pad}- ")
+                        lines.extend(_yaml_val(item, indent + 1))
+                    elif isinstance(item, bool):
+                        lines.append(f"{pad}- {str(item).lower()}")
+                    elif isinstance(item, (int, float)):
+                        lines.append(f"{pad}- {item}")
+                    else:
+                        lines.append(f'{pad}- "{item}"')
+        return lines
+
     lines = ["---"]
     for key, value in frontmatter.items():
-        if isinstance(value, list):
-            if not value:
-                lines.append(f"{key}: []")
-            else:
-                lines.append(f"{key}:")
-                for item in value:
-                    lines.append(f'  - "{item}"')
+        if isinstance(value, (dict, list)):
+            lines.append(f"{key}:")
+            lines.extend(_yaml_val(value, 1))
         elif isinstance(value, bool):
             lines.append(f"{key}: {str(value).lower()}")
         elif isinstance(value, (int, float)):
@@ -371,13 +443,26 @@ def _compute_action_aggregates(
     unique_dates = sorted({e["date"] for e in entries if e.get("date")})
     total_participants = len(unique_dates)
     location_entries = _location_entries_summary(entries)
-    return {
+
+    # Collect all exercise tags across entries for this action
+    all_exercises: set[str] = set()
+    for e in entries:
+        ex_tags = e.get("exercises", [])
+        if isinstance(ex_tags, list):
+            all_exercises.update(ex_tags)
+
+    result: dict[str, Any] = {
         "action": str(entries[0].get("action_id", "")),
         "total_participants": total_participants,
         "total_entries": total_entries,
         "total_duration_minutes": total_duration,
         "per_location": location_entries,
     }
+
+    if all_exercises:
+        result["exercises"] = sorted(all_exercises)
+
+    return result
 
 
 def _update_action_file(
@@ -558,6 +643,39 @@ def _update_global_aggregates(
         json.dumps(index, indent=2) + "\n", encoding="utf-8"
     )
 
+    # Update action-registry-index.json (lightweight lookup for agents)
+    # Contains only slug, title, entry count, exercise tags, and locations.
+    # Agents fetch this file once to match activities without reading every action file.
+    registry_list: list[dict[str, Any]] = []
+    actions_dir = public_actions_dir / "actions"
+    if actions_dir.exists():
+        for md_file in sorted(actions_dir.glob("*.md")):
+            fm = _read_frontmatter(md_file)
+            if not fm:
+                continue
+            slug = fm.get("slug", md_file.stem)
+            entry = {
+                "slug": slug,
+                "title": fm.get("action", slug.replace("-", " ").title()),
+                "total_entries": fm.get("total_entries", 0),
+                "total_participants": fm.get("total_participants", 0),
+            }
+            # Extract locations and exercise tags from per_location
+            per_loc = fm.get("per_location", {})
+            if isinstance(per_loc, dict):
+                locations = [loc for loc in per_loc if loc != "__unknown__"]
+                if locations:
+                    entry["locations"] = sorted(locations)
+            # Add exercises if present
+            exercises = fm.get("exercises", [])
+            if isinstance(exercises, list) and exercises:
+                entry["exercises"] = exercises
+            registry_list.append(entry)
+
+    (aggregates_dir / "action-registry-index.json").write_text(
+        json.dumps(registry_list, indent=2) + "\n", encoding="utf-8"
+    )
+
 
 # ---------------------------------------------------------------------------
 # Git operations
@@ -695,6 +813,58 @@ def _filter_matched_entries(entries: list[dict[str, Any]]) -> list[dict[str, Any
     return [e for e in entries if e.get("public_action_id")]
 
 
+def _build_registry_index(public_actions_dir: Path) -> None:
+    """Rebuild action-registry-index.json from action files.
+
+    This produces a lightweight JSON file that agents can fetch once
+    (instead of reading every action file) to match activities by name
+    or exercise tags.
+    """
+    aggregates_dir = public_actions_dir / "aggregates"
+    aggregates_dir.mkdir(parents=True, exist_ok=True)
+
+    actions_dir = public_actions_dir / "actions"
+    if not actions_dir.exists():
+        (aggregates_dir / "action-registry-index.json").write_text(
+            "[]\n", encoding="utf-8"
+        )
+        return
+
+    registry_list: list[dict[str, Any]] = []
+    for md_file in sorted(actions_dir.glob("*.md")):
+        fm = _read_frontmatter(md_file)
+        if not fm:
+            continue
+        slug = fm.get("slug", md_file.stem)
+        entry: dict[str, Any] = {
+            "slug": slug,
+            "title": fm.get("action", slug.replace("-", " ").title()),
+            "total_entries": fm.get("total_entries", 0),
+            "total_participants": fm.get("total_participants", 0),
+        }
+        # Extract locations
+        per_loc = fm.get("per_location", {})
+        if isinstance(per_loc, dict):
+            locations = sorted(
+                loc for loc in per_loc if loc != "__unknown__"
+            )
+            if locations:
+                entry["locations"] = locations
+        # Extract exercise tags
+        exercises = fm.get("exercises", [])
+        if isinstance(exercises, list) and exercises:
+            entry["exercises"] = exercises
+        # Extract first reporter
+        reporter = fm.get("first_reporter", "")
+        if reporter:
+            entry["first_reporter"] = reporter
+        registry_list.append(entry)
+
+    (aggregates_dir / "action-registry-index.json").write_text(
+        json.dumps(registry_list, indent=2) + "\n", encoding="utf-8"
+    )
+
+
 def _remove_duplicate_entries(
     public_actions_dir: Path,
     entries: list[dict[str, Any]],
@@ -781,7 +951,45 @@ def main() -> int:
         metavar="DIR",
         help=f"Path to public-actions repo clone (default: {DEFAULT_PUBLIC_ACTIONS_DIR})",
     )
+    parser.add_argument(
+        "--build-index",
+        action="store_true",
+        help="Only rebuild the action registry index (no contribution). "
+             "Useful for agents to update the lightweight lookup file after "
+             "pulling latest changes from the public repo.",
+    )
+    parser.add_argument(
+        "--fetch-index",
+        action="store_true",
+        help="Print the action registry index as JSON to stdout (no writes). "
+             "Agents use this for cheap activity matching. Requires --data-dir or default path.",
+    )
     args = parser.parse_args()
+
+    # ---- Determine paths ----
+    public_actions_dir = (
+        Path(args.data_dir).expanduser().resolve()
+        if args.data_dir
+        else _public_actions_dir()
+    )
+
+    # ---- Fetch-index mode (read-only, no contribution) ----
+    if args.fetch_index:
+        index_path = public_actions_dir / "aggregates" / "action-registry-index.json"
+        if not index_path.exists():
+            # Try to build it on-the-fly
+            _build_registry_index(public_actions_dir)
+        if index_path.exists():
+            print(index_path.read_text(encoding="utf-8"))
+        else:
+            print("[]")
+        return 0
+
+    # ---- Build-index mode (just rebuild the index file) ----
+    if args.build_index:
+        _build_registry_index(public_actions_dir)
+        print(f"Action registry index rebuilt at {public_actions_dir / 'aggregates' / 'action-registry-index.json'}")
+        return 0
 
     # ---- Check opt-in ----
     if os.environ.get("HAR_PUBLIC_CONTRIBUTE", "").strip().lower() not in ("true", "1", "yes"):
@@ -789,6 +997,13 @@ def main() -> int:
         print("Set it in your environment to enable anonymous contribution:")
         print("  export HAR_PUBLIC_CONTRIBUTE=true")
         return 0
+
+    # ---- Determine paths ----
+    public_actions_dir = (
+        Path(args.data_dir).expanduser().resolve()
+        if args.data_dir
+        else _public_actions_dir()
+    )
 
     # ---- Determine paths ----
     public_actions_dir = (
@@ -899,6 +1114,10 @@ def main() -> int:
     print("Updating global aggregates...")
     _update_global_aggregates(public_actions_dir, anon_entries)
     print("  Updated aggregate files.")
+
+    # ---- Step 7b: Rebuild registry index ----
+    _build_registry_index(public_actions_dir)
+    print("  Rebuilt action registry index.")
 
     # ---- Step 8: Git operations ----
     if args.push:
