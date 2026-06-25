@@ -28,7 +28,7 @@ You get:
 
 **This replaces:** journaling apps, planners, time trackers, habit trackers, bullet journals. Anything that asks you to manually log your life.
 
-**This is not:** a replacement for professional advice, a magic productivity fix, or a way to bill clients for your time. It's a record. What you do with it is up to you.
+**This is about:** being honest with yourself about how you spend your time. Not optimizing, not gamifying, not performing for anyone. Just keeping a record that you can actually look back on and learn from.
 
 ---
 
