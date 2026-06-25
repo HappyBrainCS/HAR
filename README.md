@@ -1,16 +1,16 @@
 # HAR — Human Action Record
 
-> *You talk to an AI. It writes the truth. Over time, a record emerges.*
+> *You talk to an agent. It writes it down. Over time, a record emerges.*
 
 ---
 
-Remembering what you actually did yesterday is hard. Remembering what you did last week is almost impossible. Remembering what you did last month and actually learning from it? Most people don't even try.
+Remembering what you actually did yesterday is hard. Remembering last week is almost impossible. Remembering last month and actually learning from it? Most people don't even try.
 
-Journaling apps ask you to write. Planners ask you to plan. Time trackers ask you to start and stop timers. None of them work because they all require *you* to do the work of structuring your life into boxes. Life doesn't fit in boxes.
+Journaling apps ask you to write. Planners ask you to plan. Time trackers ask you to start and stop timers. They all require *you* to do the work of structuring your life into boxes. Life doesn't fit in boxes.
 
-HAR is different. **You just talk.** You tell an AI agent what you did — "worked on the dashboard for a couple hours, then made lunch, then went for a walk" — and it writes structured markdown files. A local web dashboard turns that into category breakdowns, calendar views, and stats over time.
+HAR is different. **You just talk.** You tell an AI agent what you did — "went for a run, grabbed lunch, then worked on the project for a few hours" — and it writes structured markdown files. A local web dashboard turns that into category breakdowns, calendar views, and stats over time.
 
-No accounts. No subscriptions. No cloud. Your life, in files you own, organized by an AI that actually listens.
+No accounts. No subscriptions. No cloud. Your life, in files you own, organized by an agent that actually listens.
 
 ---
 
@@ -24,19 +24,21 @@ You get:
 
 - **A daily log.** Every file is a timestamped record of one activity. Over time, they accumulate into a complete picture of how you spend your time.
 - **A web dashboard.** Category breakdowns, calendar views, activity stats, time summaries — all local, all yours. Open `http://localhost:8093` and see your week.
-- **An AI you can talk to.** Your agent knows what you did. Ask it anything — *"how much time did I spend on my project this week?"*, *"when was the last time I worked out?"*, *"what did I do on Thursday?"* It reads the files and answers.
+- **An agent you can talk to.** It knows what you did. Ask it anything — *"how much time did I spend on my project this week?"*, *"when was the last time I worked out?"*, *"what did I do on Thursday?"* It reads the files and answers.
 
 **This replaces:** journaling apps, planners, time trackers, habit trackers, bullet journals. Anything that asks you to manually log your life.
 
-**This is not:** a replacement for therapy, a productivity optimizer, or a tool your employer can use to bill clients. It's a record. What you do with it is up to you.
+**This is not:** a replacement for professional advice, a magic productivity fix, or a way to bill clients for your time. It's a record. What you do with it is up to you.
 
 ---
 
 ### Part 2: The Public Record
 
-> *This is the more important piece.*
+Think about what people actually do where you live. Not what Instagram shows. Not what surveys claim. Not what AI hallucinates when you ask it. What do real people actually spend their time on?
 
-A public dataset of real human behavior — anonymized, aggregated, and contributed by people who opted in. What do people actually do? Not what surveys say, not what Instagram shows, not what productivity gurus claim. Real data from real people telling the truth about their day.
+You don't know. Nobody knows. Because that data doesn't exist anywhere.
+
+Surveys are small and biased. Social media is performative. AI models guess based on internet text, which is mostly nonsense. There is no honest, large-scale record of real human behavior. HAR's public record exists to change that.
 
 **How it works:**
 
@@ -59,43 +61,21 @@ The public record is currently small (one contributor, ~50 entries). It grows on
 
 ---
 
-## Quick Start
+## Getting Started
 
-### 1. Give your AI agent these instructions
+HAR is designed to be set up by an AI agent. Trying to do it manually is frustrating and misses the point.
 
-The file you're looking for is **`AGENTS.md`** in this repo. Give it to your AI agent (OpenClaw, Claude Code, ChatGPT, etc.). The agent reads it and handles everything — capture, categorization, file writing, dashboard building.
+**1. Give your agent this repo's URL.**
 
-If you're reading this on GitHub, open `AGENTS.md` and give the entire contents to your agent.
+Paste `https://github.com/HappyBrainCS/HAR` to any AI agent (Claude Code, ChatGPT, OpenClaw, etc.). Tell it you want to use HAR. It will read `AGENTS.md` and walk you through everything — cloning the repo, setting up your private journal, building the dashboard, and opting into the public record if you want.
 
-### 2. Set up the tooling
+**2. Use whatever agent works for you.**
 
-```bash
-git clone https://github.com/HappyBrainCS/HAR.git ~/HAR
-cd ~/HAR
-python3 scripts/build-har-derived.py   # generate the dashboard data
-python3 scripts/serve-har-dashboard.py  # start the web dashboard
-```
+- **Claude Code** (Anthropic) — great for technical users who work in their terminal.
+- **ChatGPT with code execution** — works if you paste `AGENTS.md` as instructions.
+- **OpenClaw + DeepSeek V4 Flash** — the most affordable option. Install [OpenClaw](https://openclaw.ai) and use DeepSeek V4 Flash as your model. It handles everything HAR needs for a fraction of the cost of other agents.
 
-Open `http://localhost:8093` in your browser. It'll be empty — that's fine. You fill it by talking to your agent.
-
-### 3. Start talking
-
-Your agent will ask you what you did today. Tell it. That's it.
-
-Over time, your agent learns your routine and starts prompting proactively: *"You usually do push+quad on Thursdays — get that in this morning?"*
-
-### 4. (Optional) Opt into the public record
-
-```bash
-export HAR_PUBLIC_CONTRIBUTE=true
-export HAR_PUBLIC_LOCATION="Your City, ST"
-python3 scripts/har-contribute.py --dry-run  # See what would be shared
-python3 scripts/har-contribute.py --contributor your-username
-```
-
-Your agent will walk you through the process — what gets shared, what stays private, how the matching works.
-
----
+The `AGENTS.md` file in this repo has all the instructions any agent needs. You just have to talk.
 
 ## What a Captured Entry Looks Like
 
@@ -118,9 +98,7 @@ From 9:15 to 9:45 I practiced putting at the basket in the back yard. Did
 about 80 putts. Rocking the straight-back motion improved accuracy noticeably.
 ```
 
-Every entry has this format. The agent writes it. You never touch the file. It just appears in your calendar directory and the dashboard picks it up.
-
----
+Every entry has this format. Your agent writes it. You never touch the file. It just appears in your calendar directory and the dashboard picks it up.
 
 ## Project Structure
 
@@ -129,17 +107,13 @@ Every entry has this format. The agent writes it. You never touch the file. It j
 ├── calendar/            # YOUR data — markdown files, one per activity
 ├── _derived/            # Generated dashboard data (rebuild after new entries)
 ├── _har_web/            # Dashboard frontend (HTML, CSS, JS)
-├── public-actions/      # Opt-in public record (see PUBLIC-ACTIONS.md)
+├── public-actions/      # Opt-in public record
 │   ├── actions/         # Registry of action types with aggregate stats
 │   ├── entries/         # Anonymized contribution data (per-contributor)
 │   └── aggregates/      # Computed global stats
-├── scripts/
-│   ├── build-har-derived.py    # Build dashboard data from calendar files
-│   ├── serve-har-dashboard.py  # Start the web dashboard
-│   ├── har-contribute.py       # Anonymize and contribute to public record
-│   └── har-reindex.py          # Rebuild aggregates from all contributors
+├── scripts/             # Build, serve, contribute, reindex
 ├── maps/                # Category config, frontmatter schema
-├── AGENTS.md            # ⬅ Give this to your AI agent
+├── AGENTS.md            # ⬅ This is what your agent reads
 ├── PUBLIC-ACTIONS.md    # Full opt-in public record documentation
 └── README.md            # This file
 ```
