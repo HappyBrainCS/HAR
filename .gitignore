@@ -1,0 +1,18 @@
+# HAR — .gitignore
+
+# Personal calendar data (DO NOT COMMIT — this is YOUR data)
+calendar/
+
+# Generated derived data
+_derived/
+
+# Design docs / internal notes
+_design/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# OS files
+.DS_Store

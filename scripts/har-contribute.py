@@ -169,9 +169,16 @@ def _anonymize_entry(entry: dict[str, Any]) -> dict[str, Any]:
 # Action Registry (public-actions repo)
 # ---------------------------------------------------------------------------
 
-def _action_file_path(slug: str) -> Path:
-    """Return the path to an action registry file given its slug."""
-    return _public_actions_dir() / "actions" / f"{slug}.md"
+def _action_file_path(slug: str, public_actions_dir: Path | None = None) -> Path:
+    """Return the path to an action registry file given its slug.
+
+    Args:
+        slug: Action slug (e.g. "morning-rituals").
+        public_actions_dir: Override directory (from --data-dir or env var).
+                           Falls back to _public_actions_dir() if None.
+    """
+    base = public_actions_dir or _public_actions_dir()
+    return base / "actions" / f"{slug}.md"
 
 
 def _action_slug(action_id: str) -> str:
@@ -185,8 +192,12 @@ def _action_slug(action_id: str) -> str:
     )
 
 
-def _load_action_registry() -> dict[str, dict[str, Any]]:
+def _load_action_registry(public_actions_dir: Path | None = None) -> dict[str, dict[str, Any]]:
     """Read the current action registry from the public-actions repo.
+
+    Args:
+        public_actions_dir: Override directory (from --data-dir or env var).
+                           Falls back to _public_actions_dir() if None.
 
     Returns a dict mapping slug -> {
         "slug": str,
@@ -195,7 +206,8 @@ def _load_action_registry() -> dict[str, dict[str, Any]]:
         "frontmatter": dict or None
     }
     """
-    actions_dir = _public_actions_dir() / "actions"
+    base = public_actions_dir or _public_actions_dir()
+    actions_dir = base / "actions"
     registry: dict[str, dict[str, Any]] = {}
 
     if not actions_dir.exists():
@@ -374,9 +386,15 @@ def _update_action_file(
     new_entries: list[dict[str, Any]],
     existing_frontmatter: dict[str, Any] | None,
     registry_entries: list[dict[str, Any]],
+    public_actions_dir: Path | None = None,
 ) -> Path:
-    """Create or update an action file with new entry aggregates."""
-    action_path = _action_file_path(slug)
+    """Create or update an action file with new entry aggregates.
+
+    Args:
+        public_actions_dir: Override directory (from --data-dir or env var).
+                           Passed through to _action_file_path.
+    """
+    action_path = _action_file_path(slug, public_actions_dir)
     action_dir = action_path.parent
     action_dir.mkdir(parents=True, exist_ok=True)
 
@@ -821,8 +839,8 @@ def main() -> int:
 
     # ---- Step 4: Match/Create actions ----
     print("Loading action registry...")
-    registry = _load_action_registry() if not args.no_match else {}
-    registry_slugs_for_entries = _load_action_registry() if args.no_match else registry
+    registry = _load_action_registry(public_actions_dir) if not args.no_match else {}
+    registry_slugs_for_entries = _load_action_registry(public_actions_dir) if args.no_match else registry
 
     # Collect entries per action slug
     entries_by_slug: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -872,7 +890,7 @@ def main() -> int:
         action_id = slug_entries[0].get("action_id", slug.replace("-", " ").title())
         existing_fm = None if slug not in registry else registry[slug].get("frontmatter")
 
-        _update_action_file(slug, action_id, slug_entries, existing_fm, [])
+        _update_action_file(slug, action_id, slug_entries, existing_fm, [], public_actions_dir)
         updated_actions.append(slug)
 
     print(f"  Updated {len(updated_actions)} action files.")

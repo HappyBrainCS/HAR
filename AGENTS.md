@@ -199,16 +199,22 @@ Open `http://localhost:8093` in a browser to view the dashboard.
 │   ├── har-time-*.md    # Time summary reports
 │   └── har-activity-journals/  # One page per unique activity
 ├── _har_web/            # Dashboard frontend (HTML, CSS, JS)
+├── public-actions/      # Opt-in public action record (see PUBLIC-ACTIONS.md)
+│   ├── actions/         # Action registry — one file per activity type
+│   ├── entries/         # Anonymized contribution data (JSONL)
+│   └── aggregates/      # Computed stats by action and location
 ├── scripts/
 │   ├── build-har-derived.py    # Build the derived data
-│   └── serve-har-dashboard.py  # Start the web dashboard
+│   ├── serve-har-dashboard.py  # Start the web dashboard
+│   └── har-contribute.py       # Anonymize and contribute to public record
 ├── maps/
 │   ├── action-categories.yaml  # Category mapping config
 │   └── frontmatter-schema.yaml # Canonical frontmatter schema
 ├── plans/               # Daily plans (optional)
 ├── start.sh             # Launches the dashboard
 ├── README.md            # Full project philosophy and setup
-└── AGENTS.md            # This file — agent instructions
+├── AGENTS.md            # This file — agent instructions
+└── PUBLIC-ACTIONS.md    # Opt-in public record documentation
 ```
 
 ## Tips for the Agent

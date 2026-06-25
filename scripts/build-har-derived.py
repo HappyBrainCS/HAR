@@ -60,6 +60,11 @@ def read_entry(path: Path) -> dict[str, Any]:
     end_index = lines[1:].index("---") + 1
     fm = yaml.safe_load("\n".join(lines[1:end_index])) or {}
     body = "\n".join(lines[end_index + 1:]).strip()
+    frontmatter_notes = str(fm.get("notes", "")).strip()
+    if body and frontmatter_notes and frontmatter_notes not in body:
+        notes = f"{body}\n\n{frontmatter_notes}"
+    else:
+        notes = body or frontmatter_notes
     return {
         "path": path,
         "date": str(fm.get("date", "")),
@@ -69,8 +74,8 @@ def read_entry(path: Path) -> dict[str, Any]:
         "duration": fm.get("duration") if isinstance(fm.get("duration"), int) else None,
         "capture_mode": str(fm.get("capture_mode", "unknown-legacy")),
         "custom_fields": fm.get("custom_fields") if isinstance(fm.get("custom_fields"), dict) else {},
-        "has_notes": bool(body),
-        "notes": body,
+        "has_notes": bool(notes),
+        "notes": notes,
         "stem": path.stem,
     }
 
@@ -1821,7 +1826,7 @@ def _activity_review_state(
         return f"notes-only across {_count_phrase(total_sessions, 'session')}"
     if has_explicit_no_stats:
         return f"explicit no-stats in {_count_phrase(total_sessions, 'session')}"
-    return f"visible review detail across {_count_phrase(total_sessions, 'session')}"
+    return f"no notes or stat names across {_count_phrase(total_sessions, 'session')}"
 
 
 def _activity_header_state_label(
@@ -1897,7 +1902,7 @@ def _activity_header_state_label(
         return f"no-stats · {_session_phrase(total_sessions)}" if total_sessions > 1 else "no-stats"
     if structured_sessions:
         return "structured detail"
-    return "review detail"
+    return "no detail captured"
 
 
 def _movement_volume_summary(exercise_lines: list[str]) -> str:
@@ -2278,7 +2283,7 @@ def _activity_state_detail_read(
         return _summary_note_clue(note_clues)
     if has_explicit_no_stats:
         return "No stats to report"
-    return ""
+    return "No notes or stat names captured"
 
 
 def _activity_state_summary_parts(
@@ -2323,7 +2328,7 @@ def _activity_state_summary_parts(
     elif structured_sessions:
         state_label = "structured detail"
     else:
-        state_label = "review detail"
+        state_label = "no detail captured"
 
     detail = _activity_state_detail_read(
         total_sessions=len(act_entries),
@@ -3368,10 +3373,21 @@ def _signature_surface_meaning_parts(row: dict[str, str]) -> tuple[str, str, str
 
 
 def _meaning_row_state_badge(row: dict[str, str]) -> str:
+    state = str(row.get("state", "")).strip()
+    detail = str(row.get("detail", "")).strip()
+    detail_secondary = str(row.get("detail_secondary", "")).strip()
+    if (
+        state == "no detail captured"
+        and (
+            "No notes or stat names captured" in detail
+            or "No notes or stat names captured" in detail_secondary
+        )
+    ):
+        return ""
     badge = str(row.get("state_badge", "")).strip()
     if badge:
         return badge
-    return str(row.get("state", "")).strip()
+    return state
 
 
 def _strip_shared_state_from_preview_line(text: str, state: str) -> str:
@@ -6787,17 +6803,14 @@ def _shell_overview_lane_rows_html(
     return "\n".join(lines)
 
 
-def _shell_overview_signature_rows(
+def _shell_overview_time_rows(
     acts: list[tuple[str, int, list[dict]]],
     *,
     visible_count: int,
     time_overflow_max_chars: int,
     time_overflow_title_max_chars: int,
-    meaning_max_chars: int,
-    meaning_overflow_max_chars: int,
-    meaning_overflow_title_max_chars: int,
 ) -> list[dict[str, Any]]:
-    time_rows = _category_time_scan_rows(
+    return _category_time_scan_rows(
         acts,
         visible_count=visible_count,
         overflow_max_chars=time_overflow_max_chars,
@@ -6805,6 +6818,16 @@ def _shell_overview_signature_rows(
         compact_overflow_title=True,
         overflow_preview_items=TOP_SHELL_OVERFLOW_PREVIEW_COUNT,
     )
+
+
+def _shell_overview_meaning_rows(
+    acts: list[tuple[str, int, list[dict]]],
+    *,
+    visible_count: int,
+    meaning_max_chars: int,
+    meaning_overflow_max_chars: int,
+    meaning_overflow_title_max_chars: int,
+) -> list[dict[str, Any]]:
     meaning_rows = _category_time_scan_meaning_rows(
         acts,
         max_items=visible_count,
@@ -6814,24 +6837,17 @@ def _shell_overview_signature_rows(
         overflow_title_max_chars=meaning_overflow_title_max_chars,
         compact_overflow_title=True,
     )
-
-    total_rows = max(len(time_rows), len(meaning_rows))
-    merged_rows: list[dict[str, Any]] = []
-    for index in range(total_rows):
-        time_row = time_rows[index] if index < len(time_rows) else {}
-        meaning_row = meaning_rows[index] if index < len(meaning_rows) else {}
-        state_badge = _meaning_row_state_badge(meaning_row) if meaning_row else ""
-        _, detail, _ = _signature_surface_meaning_parts(meaning_row) if meaning_row else ("", "", "")
+    rendered_rows: list[dict[str, Any]] = []
+    for meaning_row in meaning_rows:
+        state_badge = _meaning_row_state_badge(meaning_row)
+        _, detail, _ = _signature_surface_meaning_parts(meaning_row)
         detail_lines = _meaning_row_extra_detail_lines(
             meaning_row,
             signature_surface=True,
-        ) if meaning_row else []
-        merged_rows.append(
+        )
+        rendered_rows.append(
             {
-                "title": str(time_row.get("title", "")).strip()
-                or str(meaning_row.get("title", "")).strip(),
-                "duration": str(time_row.get("duration", "")).strip(),
-                "meta": str(time_row.get("meta", "")).strip(),
+                "title": str(meaning_row.get("title", "")).strip(),
                 "state_badge": state_badge,
                 "detail": detail,
                 "detail_secondary": detail_lines[0] if detail_lines else "",
@@ -6839,7 +6855,7 @@ def _shell_overview_signature_rows(
                 "detail_quaternary": detail_lines[2] if len(detail_lines) > 2 else "",
             }
         )
-    return merged_rows
+    return rendered_rows
 
 
 def _shell_overview_signature_rows_html(
@@ -6860,6 +6876,8 @@ def _shell_overview_signature_rows_html(
         meta = str(row.get("meta", "")).strip()
         state_badge = str(row.get("state_badge", "")).strip()
         detail = str(row.get("detail", "")).strip()
+        if duration and meta and detail == f"{duration} · {meta}":
+            detail = ""
         row_class = "har-time-shell-category-strip-pill-breakdown-row"
         if title.startswith("+"):
             row_class += " is-more"
@@ -6876,16 +6894,25 @@ def _shell_overview_signature_rows_html(
             lines.append(
                 f'          <span class="har-time-shell-category-strip-pill-breakdown-row-state">{html.escape(state_badge)}</span>'
             )
-        lines.extend(
-            [
-                "        </span>",
-                '        <span class="har-time-shell-category-strip-pill-breakdown-row-time">',
-                f'          <span class="har-time-shell-category-strip-pill-breakdown-row-duration">{html.escape(duration)}</span>',
-                f'          <span class="har-time-shell-category-strip-pill-breakdown-row-meta">{html.escape(meta)}</span>',
-                "        </span>",
-                "      </div>",
-            ]
-        )
+        lines.append("        </span>")
+        if duration or meta:
+            lines.extend(
+                [
+                    '        <span class="har-time-shell-category-strip-pill-breakdown-row-time">',
+                    (
+                        f'          <span class="har-time-shell-category-strip-pill-breakdown-row-duration">{html.escape(duration)}</span>'
+                        if duration
+                        else ""
+                    ),
+                    (
+                        f'          <span class="har-time-shell-category-strip-pill-breakdown-row-meta">{html.escape(meta)}</span>'
+                        if meta
+                        else ""
+                    ),
+                    "        </span>",
+                ]
+            )
+        lines.append("      </div>")
         if detail:
             lines.append(
                 f'      <div class="har-time-shell-category-strip-pill-breakdown-row-detail">{html.escape(detail)}</div>'
@@ -7033,11 +7060,15 @@ def _shell_overview_category_row_html(
     row_class = "har-time-shell-category-row"
     if activity_count == 1:
         row_class += " is-single-activity"
-    signature_rows = _shell_overview_signature_rows(
+    time_rows = _shell_overview_time_rows(
         acts,
         visible_count=2,
         time_overflow_max_chars=92,
         time_overflow_title_max_chars=84,
+    )
+    meaning_rows = _shell_overview_meaning_rows(
+        acts,
+        visible_count=2,
         meaning_max_chars=104,
         meaning_overflow_max_chars=132,
         meaning_overflow_title_max_chars=84,
@@ -7066,7 +7097,8 @@ def _shell_overview_category_row_html(
                 f'  <div class="har-time-shell-category-row-meta">'
                 f'{html.escape(" · ".join(meta_items))}</div>'
             ),
-            _shell_overview_signature_rows_html("Activity Breakdown", signature_rows),
+            _shell_overview_signature_rows_html("Activity Time", time_rows),
+            _shell_overview_signature_rows_html("Activity Read", meaning_rows),
             share_rail_html,
             "</div>",
         ]
@@ -7114,11 +7146,15 @@ def _shell_overview_category_totals_strip_html(
                 f"{share}% of week",
             ],
         )
-        signature_rows = _shell_overview_signature_rows(
+        time_rows = _shell_overview_time_rows(
             acts,
             visible_count=TOP_SHELL_VISIBLE_ACTIVITY_COUNT,
             time_overflow_max_chars=68,
             time_overflow_title_max_chars=84,
+        )
+        meaning_rows = _shell_overview_meaning_rows(
+            acts,
+            visible_count=TOP_SHELL_VISIBLE_ACTIVITY_COUNT,
             meaning_max_chars=116,
             meaning_overflow_max_chars=148,
             meaning_overflow_title_max_chars=84,
@@ -7142,14 +7178,22 @@ def _shell_overview_category_totals_strip_html(
                 f"      {meta_html}",
             ]
         )
-        if signature_rows:
+        if time_rows or meaning_rows:
             lines.append('      <div class="har-time-shell-category-strip-pill-lanes">')
-            lines.append(
-                _shell_overview_signature_rows_html(
-                    "Activity Breakdown",
-                    signature_rows,
+            if time_rows:
+                lines.append(
+                    _shell_overview_signature_rows_html(
+                        "Activity Time",
+                        time_rows,
+                    )
                 )
-            )
+            if meaning_rows:
+                lines.append(
+                    _shell_overview_signature_rows_html(
+                        "Activity Read",
+                        meaning_rows,
+                    )
+                )
             if share_rail_html:
                 lines.append(share_rail_html)
             lines.append("      </div>")

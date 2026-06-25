@@ -1,0 +1,68 @@
+{
+  "generated": "2026-06-19T17:06:19.031098",
+  "total_entries": 15,
+  "total_duration_minutes": 1140,
+  "total_participants": 2,
+  "date_range": {
+    "start": "2026-06-18",
+    "end": "2026-06-19"
+  },
+  "by_action": [
+    {
+      "action_id": "afternoon-reset",
+      "total_entries": 1,
+      "total_duration_minutes": 15,
+      "total_participants": 1
+    },
+    {
+      "action_id": "dinner",
+      "total_entries": 1,
+      "total_duration_minutes": 80,
+      "total_participants": 1
+    },
+    {
+      "action_id": "gaming",
+      "total_entries": 1,
+      "total_duration_minutes": 100,
+      "total_participants": 1
+    },
+    {
+      "action_id": "lunch",
+      "total_entries": 1,
+      "total_duration_minutes": 155,
+      "total_participants": 1
+    },
+    {
+      "action_id": "mid-morning-reset",
+      "total_entries": 1,
+      "total_duration_minutes": 30,
+      "total_participants": 1
+    },
+    {
+      "action_id": "morning-rituals",
+      "total_entries": 3,
+      "total_duration_minutes": 140,
+      "total_participants": 2
+    },
+    {
+      "action_id": "project-work",
+      "total_entries": 4,
+      "total_duration_minutes": 585,
+      "total_participants": 2
+    },
+    {
+      "action_id": "workout-burst",
+      "total_entries": 3,
+      "total_duration_minutes": 35,
+      "total_participants": 1
+    }
+  ],
+  "by_location": [
+    {
+      "location": "Cedar City, UT",
+      "total_entries": 15,
+      "total_duration_minutes": 1140,
+      "total_participants": 2
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{"action_id": "afternoon-reset", "date": "2026-06-18", "duration": 15, "location": "Cedar City, UT", "time_bucket": "afternoon", "weekday": 3}
+{"action_id": "gaming", "date": "2026-06-18", "duration": 100, "location": "Cedar City, UT", "time_bucket": "morning", "weekday": 3}
+{"action_id": "dinner", "date": "2026-06-18", "duration": 80, "location": "Cedar City, UT", "time_bucket": "evening", "weekday": 3}
+{"action_id": "lunch", "date": "2026-06-18", "duration": 155, "location": "Cedar City, UT", "time_bucket": "afternoon", "weekday": 3}
+{"action_id": "morning-rituals", "date": "2026-06-18", "duration": 50, "location": "Cedar City, UT", "time_bucket": "morning", "weekday": 3}
+{"action_id": "morning-rituals", "date": "2026-06-18", "duration": 60, "location": "Cedar City, UT", "time_bucket": "dawn", "weekday": 3}
+{"action_id": "project-work", "date": "2026-06-18", "duration": 165, "location": "Cedar City, UT", "time_bucket": "dawn", "weekday": 3}
+{"action_id": "project-work", "date": "2026-06-18", "duration": 180, "location": "Cedar City, UT", "time_bucket": "afternoon", "weekday": 3}
+{"action_id": "project-work", "date": "2026-06-18", "duration": 120, "location": "Cedar City, UT", "time_bucket": "evening", "weekday": 3}
+{"action_id": "workout-burst", "date": "2026-06-18", "duration": 15, "location": "Cedar City, UT", "time_bucket": "morning", "weekday": 3}
+{"action_id": "workout-burst", "date": "2026-06-18", "duration": 10, "location": "Cedar City, UT", "time_bucket": "afternoon", "weekday": 3}
+{"action_id": "workout-burst", "date": "2026-06-18", "duration": 10, "location": "Cedar City, UT", "time_bucket": "evening", "weekday": 3}

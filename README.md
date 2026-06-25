@@ -18,6 +18,25 @@ HAR is for neither. HAR is for **you**, on your machine, in files you own. The A
 - **No lock-in.** Markdown files are universal. You can read them with any text editor, grep them, or write your own tools.
 - **No forms.** You report conversationally. The agent writes the structured files.
 
+## Quick Start
+
+### Prerequisites
+- An AI agent capable of running scripts and writing files (OpenClaw, Claude Code, ChatGPT, etc.)
+- Python 3
+- A web browser (for the dashboard)
+
+### Setup
+```bash
+git clone https://github.com/HappyBrainCS/HAR.git ~/HAR
+cd ~/HAR
+python3 scripts/build-har-derived.py   # build the derived data
+python3 scripts/serve-har-dashboard.py  # start the dashboard
+# Open http://localhost:8093
+```
+
+### Start Logging
+Give your AI agent the `AGENTS.md` file in this repo. The agent reads it and handles everything — capture format, file naming, category mapping, discreet activity names. You just talk about your day.
+
 ## How It Works
 
 HAR has three layers:
@@ -37,52 +56,39 @@ A build script reads all calendar markdown files and produces structured JSON, t
 ### Layer 3 — Review
 A local web dashboard shows your data: category breakdown, time stats, activity wikis, calendar view. Everything is served from `localhost:8093`.
 
-## Quick Start
-
-### Prerequisites
-- An AI agent capable of running scripts and writing files (OpenClaw, Claude Code, etc.)
-- Python 3
-- A web browser (for the dashboard)
-
-### Setup
-```bash
-git clone https://github.com/YOUR_USERNAME/HAR.git ~/HAR
-cd ~/HAR
-python3 scripts/build-har-derived.py   # build the derived data
-python3 scripts/serve-har-dashboard.py  # start the dashboard
-# Open http://localhost:8093
-```
-
-### Start Logging
-Give your AI agent these instructions:
-
-> "You are my HAR logger. When I tell you what I've done, write a structured calendar entry to `~/HAR/calendar/YYYY/YYYY-MM/YYYY-MM-DD-activity-slug.md`. Use YAML frontmatter with these fields: `type: action`, `date`, `weekday`, `time`, `activity`, `duration`, `category`, `subcategory`, `source: scribe`. Add a brief notes body. Map the category from the activity name using these rules:
-> - work/health/creative/personal/gaming/social
-> - I never pick the category — you infer it."
-
-Then just talk. "This morning I did push and quads for about 45 minutes, then worked on the HAR dashboard for two hours."
-
-The agent writes the file. Run the build script. Refresh the dashboard. That's it.
-
 ## Project Structure
 ```
 ~/HAR/
 ├── calendar/            # Source of truth — flat markdown files
-│   └── YYYY/YYYY-MM/   # Organised by year and month
+│   └── YYYY/YYYY-MM/   # Organized by year and month
 ├── _derived/            # Built from calendar files (generated)
 │   ├── har-data.json    # Structured JSON for the dashboard
 │   ├── har-time-*.md    # Time summary reports
 │   └── har-activity-journals/  # One page per unique activity
 ├── _har_web/            # Dashboard frontend (HTML, CSS, JS)
+├── public-actions/      # Opt-in public action record (see PUBLIC-ACTIONS.md)
+│   ├── actions/         # Action registry — one file per activity type
+│   ├── entries/         # Anonymized contribution data (JSONL)
+│   └── aggregates/      # Computed stats by action and location
 ├── scripts/
 │   ├── build-har-derived.py    # Build the derived data
-│   └── serve-har-dashboard.py  # Start the web dashboard
+│   ├── serve-har-dashboard.py  # Start the web dashboard
+│   └── har-contribute.py       # Anonymize and contribute to public record
 ├── maps/
-│   └── action-categories.yaml  # Category mapping config
+│   ├── action-categories.yaml   # Category mapping config
+│   └── frontmatter-schema.yaml  # Canonical frontmatter schema
 ├── plans/               # Daily plans (optional)
 ├── start.sh             # Launches the dashboard
-└── README.md
+├── README.md            # This file
+├── AGENTS.md            # Copy-paste agent instructions
+└── PUBLIC-ACTIONS.md    # Opt-in public record documentation
 ```
+
+## Opt-In Public Record
+
+HAR includes an optional public action record. If you opt in, anonymized summaries of your activities are contributed to `public-actions/`. Over time, this creates a public dataset showing real human behavior patterns — by activity, by location, by time of day.
+
+**No personal data is ever shared.** See `PUBLIC-ACTIONS.md` for full details on what gets shared, what doesn't, privacy guarantees, and how to opt in.
 
 ## Dashboard Pages
 - **Home** — Week so far: total time, category breakdown, recent actions
@@ -107,6 +113,7 @@ The agent writes the file. Run the build script. Refresh the dashboard. That's i
 - **Agent picks categories** — you never manually assign a category. The agent infers from activity name and context.
 - **Conversational capture** — no forms, no structured input. Just talk naturally.
 - **Local-first** — everything runs on your machine. No servers, no accounts, no subscriptions.
+- **Opt-in public record** — sharing is never the default. The anonymization pipeline is auditable, open source, and only runs when you explicitly enable it.
 
 ## License
 MIT — do whatever you want with it. Fork it, extend it, build something else on top.
