@@ -12,9 +12,10 @@ Give this file to any AI agent (OpenClaw, Claude Code, ChatGPT, etc.) to set up 
 
 1. **Clone the repo** — `git clone https://github.com/YOUR_USERNAME/HAR.git ~/HAR`
 2. **Read this file** — you're doing it now. Give this entire file to your AI agent.
-3. **Learn the user's routine** — ask the user about their routine, typical schedule, timezone, and location. Use that context.
-4. **Start capturing** — ask the user what they've done today, then write structured markdown files (details below).
-5. **Build and serve the dashboard** — `cd ~/HAR && python3 scripts/build-har-derived.py && python3 scripts/serve-har-dashboard.py`
+3. **Install dependencies** — `cd ~/HAR && pip3 install -r requirements.txt`
+4. **Learn the user's routine** — ask the user about their routine, typical schedule, timezone, and location. Use that context.
+5. **Start capturing** — ask the user what they've done today, then write structured markdown files (details below).
+6. **Build and serve the dashboard** — `cd ~/HAR && python3 scripts/build-har-derived.py && python3 scripts/serve-har-dashboard.py`
 
 ## The 4-Field Capture Format
 
@@ -359,6 +360,9 @@ HAR_PUBLIC_DISPLAY_NAME="HappyBrain"  # Optional — first-reporter credit
 ## Build & Serve
 
 ```bash
+# Install dependencies (required before first build)
+pip3 install -r requirements.txt
+
 # Rebuild dashboard data from calendar files
 python3 scripts/build-har-derived.py
 

@@ -63,19 +63,19 @@ The public record is currently small (one contributor, ~50 entries). It grows on
 
 ## Getting Started
 
-HAR is designed to be set up by an AI agent. Trying to do it manually is frustrating and misses the point.
+HAR is designed to be set up by an **AI agent that can read a repo and run Python scripts**. A normal chat won't cut it — you need a tool that works in your terminal or development environment.
 
 **1. Give your agent this repo's URL.**
 
-Paste `https://github.com/HappyBrainCS/HAR` to any AI agent (Claude Code, ChatGPT, OpenClaw, etc.). Tell it you want to use HAR. It will read `AGENTS.md` and walk you through everything — cloning the repo, setting up your private journal, building the dashboard, and opting into the public record if you want.
+Paste `https://github.com/HappyBrainCS/HAR` to your agent. It reads `AGENTS.md` and handles everything — cloning, dependencies, setup, capture, dashboard.
 
-**2. Use whatever agent works for you.**
+**2. Recommended agents:**
 
-- **Claude Code** (Anthropic) — great for technical users who work in their terminal.
-- **ChatGPT with code execution** — works if you paste `AGENTS.md` as instructions.
-- **OpenClaw + DeepSeek V4 Flash** — the most affordable option. Install [OpenClaw](https://openclaw.ai) and use DeepSeek V4 Flash as your model. It handles everything HAR needs for a fraction of the cost of other agents.
+- **Claude Code** (Anthropic) — terminal-native, great for setup and capture.
+- **Codex CLI** (OpenAI) — terminal-based, works well for setup and scripting.
+- **OpenClaw + DeepSeek V4 Flash** — most affordable option. Install [OpenClaw](https://openclaw.ai), use DeepSeek V4 Flash, and give it this repo URL.
 
-The `AGENTS.md` file in this repo has all the instructions any agent needs. You just have to talk.
+You just talk to it.
 
 ## What a Captured Entry Looks Like
 
@@ -117,6 +117,12 @@ Every entry has this format. Your agent writes it. You never touch the file. It 
 ├── PUBLIC-ACTIONS.md    # Full opt-in public record documentation
 └── README.md            # This file
 ```
+
+## Future: Data Co-op
+
+If HAR reaches **500+ contributors** with meaningful data, the plan is to spin up an **opt-in data co-op** where contributors share revenue from licensed aggregate insights. No personal data is ever sold — only anonymized, aggregated datasets. The project takes a transparent small cut for operations; most revenue goes back to contributors.
+
+Right now, that's a future goal. But it's why HAR exists — to create an ethical alternative to the data brokers who profit from your behavior without asking. If you want in, you join because the public record is worth building. If we grow big enough, there's a path to make it financially meaningful too.
 
 ## License
 
